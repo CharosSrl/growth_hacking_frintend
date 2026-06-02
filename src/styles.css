@@ -595,65 +595,96 @@ img { max-width: 100%; display: block; }
 
 /* ── Canvas Page ────────────────────────────────────────────────────────── */
 
-.canvas-grid {
+.canvas-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--space-5);
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: var(--space-6);
   align-items: start;
 }
 
-/* Section card */
-.section-card {
+/* ── Section navigation (left bar) ──────────────────────────── */
+.canvas-nav {
+  position: sticky; top: calc(56px + var(--space-5));
+  display: flex; flex-direction: column; gap: var(--space-4);
+}
+.canvas-nav__list { display: flex; flex-direction: column; gap: 2px; }
+.canvas-nav__item {
+  display: flex; align-items: center; gap: var(--space-2);
+  width: 100%; text-align: left;
+  padding: 9px 11px; border-radius: var(--r-md);
+  font-size: 13px; font-weight: 500; color: var(--text-secondary);
+  border: 1px solid transparent; border-left: 2px solid transparent;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+.canvas-nav__item:hover { background: var(--bg-subtle); color: var(--text-primary); }
+.canvas-nav__item--active {
+  background: var(--bg-raised);
+  border-color: var(--border-default);
+  border-left-color: var(--sec-color, var(--accent));
+  color: var(--text-primary);
+}
+.canvas-nav__item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sec-color, var(--accent)) 30%, transparent);
+}
+.canvas-nav__dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  background: var(--sec-color, var(--accent));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sec-color, var(--accent)) 16%, transparent);
+}
+.canvas-nav__label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.canvas-nav__count {
+  font-size: 11px; color: var(--text-tertiary);
+  background: var(--bg-overlay); padding: 1px 7px;
+  border-radius: 99px; border: 1px solid var(--border-default);
+}
+.canvas-nav__item--active .canvas-nav__count {
+  color: var(--sec-color, var(--accent));
+  border-color: color-mix(in srgb, var(--sec-color, var(--accent)) 35%, transparent);
+}
+.canvas-nav__item--skeleton { pointer-events: none; }
+.canvas-nav__foot { padding-top: var(--space-3); border-top: 1px solid var(--border-default); }
+
+/* ── Section page (right content) ───────────────────────────── */
+.section-page {
   background: var(--bg-raised);
   border: 1px solid var(--border-default);
-  border-left: 3px solid var(--sec-color, var(--accent));
   border-radius: var(--r-lg);
-  overflow: hidden;
+  padding: var(--space-6);
+  min-height: 60vh;
 }
-.section-card--entering {
-  animation: cardEnter var(--t-slow) ease both;
-}
-.section-card:hover { border-color: var(--border-strong); border-left-color: var(--sec-color, var(--accent)); }
-
-.section-card__head {
-  display: flex; align-items: center; gap: var(--space-2);
-  padding: 14px 16px;
+.section-page__header {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding-bottom: var(--space-5); margin-bottom: var(--space-5);
   border-bottom: 1px solid var(--border-default);
 }
-.section-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--sec-color, var(--accent)); flex-shrink: 0;
+.section-page__dot {
+  width: 12px; height: 12px; border-radius: 50%; margin-top: 5px; flex-shrink: 0;
+  background: var(--sec-color, var(--accent));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--sec-color, var(--accent)) 16%, transparent);
 }
-.section-title {
-  font-size: 11px; font-weight: 600;
-  letter-spacing: 0.07em; text-transform: uppercase;
-  color: var(--sec-color, var(--accent));
-  flex: 1;
+.section-page__title {
+  font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
+  color: var(--text-primary); line-height: 1.15;
 }
-.section-count {
-  font-size: 11px; color: var(--text-tertiary);
-  background: var(--bg-overlay); padding: 2px 7px;
-  border-radius: 99px; border: 1px solid var(--border-default);
-  min-width: 1px;
-}
+.section-page__sub { font-size: 13px; color: var(--text-tertiary); margin-top: 3px; }
 
-.section-card__body {
-  padding: var(--space-4);
-  display: flex; flex-direction: column; gap: var(--space-5);
-}
-
-/* Section skeleton */
-.section-card--skeleton {
+/* ── Field block ────────────────────────────────────────────── */
+.field-stack { display: flex; flex-direction: column; gap: var(--space-5); }
+.field-block {
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  background: var(--bg-base);
   padding: var(--space-4);
 }
-
-/* Field group */
-.field-group { display: flex; flex-direction: column; gap: var(--space-2); }
-.field-label {
-  font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
-  color: var(--text-tertiary); text-transform: uppercase;
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--border-default);
+.field-block--skeleton { display: flex; flex-direction: column; gap: var(--space-2); }
+.field-block__label {
+  font-size: 13px; font-weight: 600; letter-spacing: 0.01em;
+  color: var(--text-secondary); margin-bottom: var(--space-3);
+}
+.field-block__empty {
+  font-size: 12px; color: var(--text-tertiary); font-style: italic;
+  padding: 2px 0 var(--space-1);
 }
 
 /* Notes list */
@@ -840,12 +871,24 @@ img { max-width: 100%; display: block; }
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 
-@media (max-width: 768px) {
+@media (max-width: 860px) {
   .page__main    { padding: var(--space-5) var(--space-4); }
   .app-header    { padding: 0 var(--space-4); }
-  .canvas-grid   { grid-template-columns: 1fr; }
   .projects-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
   .app-logo__text { display: none; }
+
+  /* Sidebar collapses to a horizontal, scrollable tab bar above the page */
+  .canvas-layout { grid-template-columns: 1fr; gap: var(--space-4); }
+  .canvas-nav {
+    position: static; flex-direction: column; gap: var(--space-3);
+  }
+  .canvas-nav__list {
+    flex-direction: row; overflow-x: auto; gap: var(--space-1);
+    padding-bottom: var(--space-1); scrollbar-width: thin;
+  }
+  .canvas-nav__item { flex: 0 0 auto; }
+  .canvas-nav__foot { border-top: none; padding-top: 0; }
+  .section-page { padding: var(--space-5) var(--space-4); }
 }
 
 @media (max-width: 480px) {
@@ -854,4 +897,48 @@ img { max-width: 100%; display: block; }
   .breadcrumb__item--current { max-width: 160px; }
   .toast-container  { bottom: var(--space-4); right: var(--space-3); left: var(--space-3); align-items: stretch; }
   .toast { max-width: 100%; }
+}
+
+/* ── Export as PDF: print-only report ───────────────────────────────────── */
+
+.print-report { display: none; }
+
+@media print {
+  /* Hide the interactive app, show the clean report */
+  .app-header, .canvas-layout, .toast-container { display: none !important; }
+  .print-report { display: block !important; }
+
+  /* Force a light, ink-friendly canvas regardless of theme */
+  html, body { background: #fff !important; }
+  .page__main { padding: 0 !important; }
+
+  .print-report {
+    color: #111; font-size: 12px; line-height: 1.5;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .print-report__head {
+    border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 20px;
+  }
+  .print-report__head h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+  .print-report__head p  { font-size: 12px; color: #555; margin-top: 4px; }
+
+  .print-section {
+    break-inside: avoid; page-break-inside: avoid;
+    margin-bottom: 22px; padding-left: 12px;
+    border-left: 4px solid var(--sec-color, #444);
+  }
+  .print-section h2 {
+    font-size: 16px; font-weight: 700; color: var(--sec-color, #111);
+    margin-bottom: 10px;
+  }
+  .print-field { break-inside: avoid; page-break-inside: avoid; margin-bottom: 10px; }
+  .print-field h3 {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: #444; margin-bottom: 3px;
+  }
+  .print-field ul { margin: 0; padding-left: 18px; }
+  .print-field li { margin-bottom: 2px; }
+  .print-field__empty { color: #999; }
+
+  @page { margin: 16mm; }
 }

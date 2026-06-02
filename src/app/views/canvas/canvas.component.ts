@@ -16,11 +16,11 @@ interface AddState  { section: string; field: string; content: string; }
   standalone: true,
   imports: [FormsModule, RouterLink, HeaderComponent],
   animations: [
-    trigger('sections', [
-      transition('void => *', [
-        query('.section-card', [
-          style({ opacity: 0, transform: 'translateY(6px)' }),
-          stagger(50, animate('220ms ease', style({ opacity: 1, transform: 'none' }))),
+    trigger('fields', [
+      transition('* => *', [
+        query('.field-block:enter', [
+          style({ opacity: 0, transform: 'translateY(8px)' }),
+          stagger(45, animate('240ms ease', style({ opacity: 1, transform: 'none' }))),
         ], { optional: true }),
       ]),
     ]),
@@ -42,101 +42,174 @@ interface AddState  { section: string; field: string; content: string; }
 
       <main class="page__main">
         @if (loading) {
-          <div class="canvas-grid">
-            @for (s of schema; track s.key) {
-              <div class="section-card section-card--skeleton" [style.--sec-color]="s.color">
-                <div class="section-card__head">
+          <div class="canvas-layout">
+            <aside class="canvas-nav" aria-hidden="true">
+              @for (s of schema; track s.key) {
+                <div class="canvas-nav__item canvas-nav__item--skeleton">
                   <span class="skeleton skeleton--dot"></span>
-                  <div class="skeleton skeleton--label" style="width:120px"></div>
+                  <span class="skeleton skeleton--label" style="width:96px"></span>
                 </div>
-                <div class="section-card__body">
-                  <div class="skeleton skeleton--note"></div>
-                  <div class="skeleton skeleton--note"></div>
-                </div>
+              }
+            </aside>
+            <div class="section-page">
+              <div class="skeleton skeleton--label" style="width:200px;height:24px"></div>
+              <div class="field-block field-block--skeleton">
+                <div class="skeleton skeleton--label" style="width:140px"></div>
+                <div class="skeleton skeleton--note"></div>
+                <div class="skeleton skeleton--note"></div>
               </div>
-            }
+              <div class="field-block field-block--skeleton">
+                <div class="skeleton skeleton--label" style="width:120px"></div>
+                <div class="skeleton skeleton--note"></div>
+              </div>
+            </div>
           </div>
         } @else {
-          <div class="canvas-grid" [@sections]="canvas">
-            @for (sec of schema; track sec.key) {
-              <section class="section-card" [style.--sec-color]="sec.color" [attr.aria-labelledby]="'sec-'+sec.key">
-                <div class="section-card__head">
-                  <span class="section-dot"></span>
-                  <h2 class="section-title" [id]="'sec-'+sec.key">{{ sec.label }}</h2>
-                  <span class="section-count">{{ sectionCount(sec.key) || '' }}</span>
-                </div>
-                <div class="section-card__body">
-                  @for (field of sec.fields; track field.key) {
-                    <div class="field-group">
-                      <div class="field-label">{{ field.label }}</div>
-                      <div class="notes-list" role="list"
-                           [id]="'nl-'+sec.key+'-'+field.key"
-                           (dragover)="onDragOver($event)"
-                           (drop)="onDrop($event, sec.key, field.key)">
-                        @for (note of fieldNotes(sec.key, field.key); track note.id) {
-                          @if (editing?.noteId === note.id) {
-                            <div class="note-chip note-chip--editing">
-                              <textarea class="note-textarea" [(ngModel)]="editing!.content" rows="3"
-                                (keydown.control.enter)="saveEdit(sec.key, field.key)"
-                                (keydown.meta.enter)="saveEdit(sec.key, field.key)"
-                                (keydown.escape)="editing = null"
-                                autofocus></textarea>
-                              <div class="add-note-form__actions">
-                                <button class="btn btn--secondary btn--sm" (click)="editing = null">Cancel</button>
-                                <button class="btn btn--primary btn--sm" (click)="saveEdit(sec.key, field.key)">Save</button>
-                              </div>
-                            </div>
-                          } @else {
-                            <div class="note-chip" [id]="'note-'+note.id" [attr.data-id]="note.id"
-                                 role="listitem" draggable="true" tabindex="0"
-                                 [attr.aria-label]="note.content + '. Note ' + ($index + 1) + ' of ' + fieldNotes(sec.key, field.key).length + '. Press Alt plus Arrow Up or Down to reorder.'"
-                                 (dragstart)="onDragStart($event, note)"
-                                 (dragend)="dragNote = null"
-                                 (keydown.alt.arrowup)="moveNote($event, sec.key, field.key, note, -1)"
-                                 (keydown.alt.arrowdown)="moveNote($event, sec.key, field.key, note, 1)">
-                              <span class="note-chip__drag" aria-hidden="true">⠿</span>
-                              <span class="note-chip__text">{{ note.content }}</span>
-                              <div class="note-chip__actions">
-                                <button class="note-action-btn" (click)="startEdit(note)" title="Edit" aria-label="Edit note">
-                                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 1.5l2.5 2.5-7 7H1v-2.5l7-7z"/></svg>
-                                </button>
-                                @if (confirmDel === note.id) {
-                                  <button class="note-action-btn btn-note-delete" (click)="doDelete(note, sec.key, field.key)">✕ Delete</button>
-                                  <button class="note-action-btn" (click)="confirmDel = null">No</button>
-                                } @else {
-                                  <button class="note-action-btn btn-note-delete" (click)="confirmDel = note.id" title="Delete" aria-label="Delete note">
-                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 3h10M3.5 3V2h5v1M2 3l1 8h6l1-8"/></svg>
-                                  </button>
-                                }
-                              </div>
-                            </div>
-                          }
-                        }
-                      </div>
+          <div class="canvas-layout">
+            <!-- ── Section navigation ─────────────────────────────── -->
+            <aside class="canvas-nav" aria-label="Canvas sections">
+              <div class="canvas-nav__list" role="tablist" aria-orientation="vertical">
+                @for (sec of schema; track sec.key) {
+                  <button class="canvas-nav__item" role="tab"
+                          [class.canvas-nav__item--active]="activeSection === sec.key"
+                          [attr.aria-selected]="activeSection === sec.key"
+                          [style.--sec-color]="sec.color"
+                          (click)="selectSection(sec.key)">
+                    <span class="canvas-nav__dot" aria-hidden="true"></span>
+                    <span class="canvas-nav__label">{{ sec.label }}</span>
+                    @if (sectionCount(sec.key)) {
+                      <span class="canvas-nav__count">{{ sectionCount(sec.key) }}</span>
+                    }
+                  </button>
+                }
+              </div>
+              <div class="canvas-nav__foot">
+                <button class="btn btn--secondary btn--full" (click)="exportPdf()"
+                        [disabled]="totalNotes() === 0" title="Export the full canvas as a PDF report">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <path d="M8 1v9M4.5 6.5L8 10l3.5-3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 11v2.5h12V11" stroke-linecap="round"/>
+                  </svg>
+                  Export as PDF
+                </button>
+              </div>
+            </aside>
 
-                      @if (adding?.section === sec.key && adding?.field === field.key) {
-                        <div class="add-note-form">
-                          <textarea class="note-textarea" [(ngModel)]="adding!.content" rows="2"
-                            [placeholder]="'Add a note to ' + field.label + '…'"
-                            (keydown.control.enter)="submitNote(sec.key, field.key)"
-                            (keydown.meta.enter)="submitNote(sec.key, field.key)"
-                            (keydown.escape)="adding = null"
-                            autofocus></textarea>
-                          <div class="add-note-form__actions">
-                            <button class="btn btn--secondary btn--sm" (click)="adding = null">Cancel</button>
-                            <button class="btn btn--primary btn--sm" (click)="submitNote(sec.key, field.key)" [disabled]="!adding!.content.trim()">Add</button>
+            <!-- ── Active section ─────────────────────────────────── -->
+            <section class="section-page" [style.--sec-color]="active.color"
+                     [attr.aria-labelledby]="'sp-'+active.key">
+              <header class="section-page__header">
+                <span class="section-page__dot" aria-hidden="true"></span>
+                <div>
+                  <h1 class="section-page__title" id="sp-{{active.key}}">{{ active.label }}</h1>
+                  <p class="section-page__sub">
+                    {{ active.fields.length }} fields ·
+                    {{ sectionCount(active.key) }} {{ sectionCount(active.key) === 1 ? 'note' : 'notes' }}
+                  </p>
+                </div>
+              </header>
+
+              <div class="field-stack" [@fields]="activeSection">
+                @for (field of active.fields; track field.key) {
+                  <div class="field-block">
+                    <div class="field-block__label">{{ field.label }}</div>
+                    <div class="notes-list" role="list"
+                         [id]="'nl-'+active.key+'-'+field.key"
+                         (dragover)="onDragOver($event)"
+                         (drop)="onDrop($event, active.key, field.key)">
+                      @for (note of fieldNotes(active.key, field.key); track note.id; let i = $index) {
+                        @if (editing?.noteId === note.id) {
+                          <div class="note-chip note-chip--editing">
+                            <textarea class="note-textarea" [(ngModel)]="editing!.content" rows="3"
+                              (keydown.control.enter)="saveEdit(active.key, field.key)"
+                              (keydown.meta.enter)="saveEdit(active.key, field.key)"
+                              (keydown.escape)="editing = null"
+                              autofocus></textarea>
+                            <div class="add-note-form__actions">
+                              <button class="btn btn--secondary btn--sm" (click)="editing = null">Cancel</button>
+                              <button class="btn btn--primary btn--sm" (click)="saveEdit(active.key, field.key)">Save</button>
+                            </div>
                           </div>
-                        </div>
-                      } @else {
-                        <button class="btn-add-note" (click)="startAdd(sec.key, field.key)"
-                                [attr.aria-label]="'Add note to ' + field.label">
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 1v10M1 6h10"/></svg>
-                          Add note
-                        </button>
+                        } @else {
+                          <div class="note-chip" [id]="'note-'+note.id" [attr.data-id]="note.id"
+                               role="listitem" draggable="true" tabindex="0"
+                               [attr.aria-label]="note.content + '. Note ' + (i + 1) + ' of ' + fieldNotes(active.key, field.key).length + '. Press Alt plus Arrow Up or Down to reorder.'"
+                               (dragstart)="onDragStart($event, note)"
+                               (dragend)="dragNote = null"
+                               (keydown.alt.arrowup)="moveNote($event, active.key, field.key, note, -1)"
+                               (keydown.alt.arrowdown)="moveNote($event, active.key, field.key, note, 1)">
+                            <span class="note-chip__drag" aria-hidden="true">⠿</span>
+                            <span class="note-chip__text">{{ note.content }}</span>
+                            <div class="note-chip__actions">
+                              <button class="note-action-btn" (click)="startEdit(note)" title="Edit" aria-label="Edit note">
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 1.5l2.5 2.5-7 7H1v-2.5l7-7z"/></svg>
+                              </button>
+                              @if (confirmDel === note.id) {
+                                <button class="note-action-btn btn-note-delete" (click)="doDelete(note, active.key, field.key)">✕ Delete</button>
+                                <button class="note-action-btn" (click)="confirmDel = null">No</button>
+                              } @else {
+                                <button class="note-action-btn btn-note-delete" (click)="confirmDel = note.id" title="Delete" aria-label="Delete note">
+                                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 3h10M3.5 3V2h5v1M2 3l1 8h6l1-8"/></svg>
+                                </button>
+                              }
+                            </div>
+                          </div>
+                        }
+                      }
+                      @if (!fieldNotes(active.key, field.key).length && !(adding?.section === active.key && adding?.field === field.key)) {
+                        <p class="field-block__empty">No notes yet.</p>
                       }
                     </div>
-                  }
-                </div>
+
+                    @if (adding?.section === active.key && adding?.field === field.key) {
+                      <div class="add-note-form">
+                        <textarea class="note-textarea" [(ngModel)]="adding!.content" rows="2"
+                          [placeholder]="'Add a note to ' + field.label + '…'"
+                          (keydown.control.enter)="submitNote(active.key, field.key)"
+                          (keydown.meta.enter)="submitNote(active.key, field.key)"
+                          (keydown.escape)="adding = null"
+                          autofocus></textarea>
+                        <div class="add-note-form__actions">
+                          <button class="btn btn--secondary btn--sm" (click)="adding = null">Cancel</button>
+                          <button class="btn btn--primary btn--sm" (click)="submitNote(active.key, field.key)" [disabled]="!adding!.content.trim()">Add</button>
+                        </div>
+                      </div>
+                    } @else {
+                      <button class="btn-add-note" (click)="startAdd(active.key, field.key)"
+                              [attr.aria-label]="'Add note to ' + field.label">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 1v10M1 6h10"/></svg>
+                        Add note
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            </section>
+          </div>
+
+          <!-- ── Print-only full report (Export as PDF) ──────────── -->
+          <div class="print-report" aria-hidden="true">
+            <div class="print-report__head">
+              <h1>{{ projectName }}</h1>
+              <p>GrowthOS — Growth Strategy Canvas · {{ today }}</p>
+            </div>
+            @for (sec of schema; track sec.key) {
+              <section class="print-section" [style.--sec-color]="sec.color">
+                <h2>{{ sec.label }}</h2>
+                @for (field of sec.fields; track field.key) {
+                  <div class="print-field">
+                    <h3>{{ field.label }}</h3>
+                    @if (fieldNotes(sec.key, field.key).length) {
+                      <ul>
+                        @for (note of fieldNotes(sec.key, field.key); track note.id) {
+                          <li>{{ note.content }}</li>
+                        }
+                      </ul>
+                    } @else {
+                      <p class="print-field__empty">—</p>
+                    }
+                  </div>
+                }
               </section>
             }
           </div>
@@ -151,10 +224,12 @@ export class CanvasComponent implements OnInit {
   loading = true;
   projectId = '';
   projectName = '';
+  activeSection = CANVAS_SCHEMA[0].key;
   editing: EditState | null = null;
   adding: AddState | null = null;
   confirmDel: string | null = null;
   dragNote: Note | null = null;
+  readonly today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   constructor(
     private route: ActivatedRoute,
@@ -163,6 +238,10 @@ export class CanvasComponent implements OnInit {
     private toast: ToastService,
     private router: Router,
   ) {}
+
+  get active(): SectionSchema {
+    return this.schema.find(s => s.key === this.activeSection) ?? this.schema[0];
+  }
 
   ngOnInit() {
     this.projectId = this.route.snapshot.paramMap.get('id')!;
@@ -182,6 +261,16 @@ export class CanvasComponent implements OnInit {
     });
   }
 
+  // ── Navigation ───────────────────────────────────────────────────
+
+  selectSection(key: string) {
+    if (this.activeSection === key) return;
+    this.activeSection = key;
+    this.editing = null;
+    this.adding = null;
+    this.confirmDel = null;
+  }
+
   // ── Helpers ─────────────────────────────────────────────────────
 
   fieldNotes(sec: string, field: string): Note[] {
@@ -191,6 +280,21 @@ export class CanvasComponent implements OnInit {
   sectionCount(sec: string): number {
     const s = this.canvas?.[sec] || {};
     return Object.values(s).reduce((n, arr) => n + (arr?.length ?? 0), 0);
+  }
+
+  totalNotes(): number {
+    return this.schema.reduce((n, s) => n + this.sectionCount(s.key), 0);
+  }
+
+  // ── Export as PDF (browser print → Save as PDF) ───────────────
+
+  exportPdf() {
+    if (this.totalNotes() === 0) return;
+    const restore = document.title;
+    document.title = `${this.projectName} — GrowthOS Canvas`;
+    const after = () => { document.title = restore; window.removeEventListener('afterprint', after); };
+    window.addEventListener('afterprint', after);
+    window.print();
   }
 
   // ── Rename project ────────────────────────────────────────────
