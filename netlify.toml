@@ -1,0 +1,15 @@
+[build]
+  publish = "."
+
+# Proxy /api/* → Railway backend (keeps the origin hidden, avoids CORS)
+[[redirects]]
+  from    = "/api/*"
+  to      = "https://appealing-creativity-production.up.railway.app/:splat"
+  status  = 200
+  force   = true
+
+# SPA fallback — serve index.html for every unmatched path
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
