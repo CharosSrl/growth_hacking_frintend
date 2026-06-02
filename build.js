@@ -62,8 +62,9 @@ copyDir('.', 'dist');
 const indexPath = path.join('dist', 'index.html');
 let html = fs.readFileSync(indexPath, 'utf8');
 
+// Replace the whole assignment line (handles both bare `= {...}` and `= saved || {...}`)
 html = html.replace(
-  /window\.FIREBASE_CONFIG = \{.*?\};/s,
+  /window\.FIREBASE_CONFIG = [^;]+;/,
   `window.FIREBASE_CONFIG = ${JSON.stringify(cfg)};`
 );
 
