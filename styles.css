@@ -516,10 +516,9 @@ img { max-width: 100%; display: block; }
   cursor: pointer;
   transition: border-color var(--t-base), transform var(--t-base), box-shadow var(--t-base);
   display: flex; flex-direction: column;
-  opacity: 0; transform: translateY(8px);
 }
 .project-card--entering {
-  animation: cardEnter var(--t-slow) ease forwards;
+  animation: cardEnter var(--t-slow) ease both;
 }
 @keyframes cardEnter {
   to { opacity: 1; transform: translateY(0); }
@@ -610,10 +609,9 @@ img { max-width: 100%; display: block; }
   border-left: 3px solid var(--sec-color, var(--accent));
   border-radius: var(--r-lg);
   overflow: hidden;
-  opacity: 0; transform: translateY(6px);
 }
 .section-card--entering {
-  animation: cardEnter var(--t-slow) ease forwards;
+  animation: cardEnter var(--t-slow) ease both;
 }
 .section-card:hover { border-color: var(--border-strong); border-left-color: var(--sec-color, var(--accent)); }
 
@@ -646,8 +644,7 @@ img { max-width: 100%; display: block; }
 
 /* Section skeleton */
 .section-card--skeleton {
-  opacity: 1; transform: none; padding: var(--space-4);
-  animation: cardEnter var(--t-slow) ease forwards;
+  padding: var(--space-4);
 }
 
 /* Field group */
