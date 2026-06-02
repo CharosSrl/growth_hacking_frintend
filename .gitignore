@@ -1,3 +1,12 @@
-.env
-*.json
+# Dependencies
+node_modules/
+
+# Build output
 dist/
+.angular/
+
+# Secrets — Firebase Admin SDK service account & env files
+.env
+.env.*
+*firebase-adminsdk*.json
+growth-hacking-*.json
