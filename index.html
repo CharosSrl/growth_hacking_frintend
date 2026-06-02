@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrowthOS — Decision Support System</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+
+  <!-- Firebase compat (auth only) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+  <script>
+    // Load saved config from localStorage; only init Firebase if config looks real
+    (function() {
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('growthos_config') || 'null'); } catch(e) {}
+      // Built-in placeholder — replaced by setup screen at runtime
+      var builtin = { apiKey:"YOUR_API_KEY", authDomain:"YOUR_PROJECT.firebaseapp.com", projectId:"YOUR_PROJECT_ID" };
+      var cfg = saved || builtin;
+      if (!cfg.apiKey || cfg.apiKey.startsWith('YOUR_')) {
+        window._needsSetup = true;
+      } else {
+        window._needsSetup = false;
+        firebase.initializeApp(cfg);
+      }
+    })();
+  </script>
+
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+
+  <style>
+    /* ─── TOKENS ────────────────────────────────────────────── */
+    :root {
+      --bg:       #070810;
+      --bg2:      #0d0f1a;
+      --bg3:      #121524;
+      --surf:     #181b2e;
+      --surf2:    #1e2235;
+      --border:   rgba(255,255,255,.06);
+      --border2:  rgba(255,255,255,.12);
+      --text:     #edeef8;
+      --text2:    #8b8daa;
+      --text3:    #484b6a;
+
+      --c-ov:  #6c63ff;
+      --c-me:  #00d4ff;
+      --c-re:  #00e5a0;
+      --c-ac:  #ffb800;
+      --c-to:  #ff4757;
+      --c-ht:  #a855f7;
+      --c-cl:  #ff6b6b;
+
+      --fd: 'Syne', sans-serif;
+      --fb: 'DM Sans', sans-serif;
+      --r:  10px;
+      --rl: 14px;
+    }
+
+    /* ─── RESET ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; }
+    body { font-family: var(--fb); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+    button { font-family: var(--fb); cursor: pointer; }
+    textarea, input { font-family: var(--fb); }
+    [x-cloak] { display: none !important; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ─── AUTH ──────────────────────────────────────────────── */
+    .auth {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; position: relative; overflow: hidden;
+    }
+    .auth-mesh {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 50% at 15% 40%, rgba(108,99,255,.18) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 40% at 85% 65%, rgba(0,212,255,.12) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 55% at 50% 100%, rgba(168,85,247,.12) 0%, transparent 60%);
+    }
+    .auth-grid {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 75%);
+    }
+    .auth-card {
+      position: relative; z-index: 1;
+      width: min(420px, 92vw);
+      padding: 3rem 2.5rem;
+      background: rgba(18,21,36,.82);
+      border: 1px solid var(--border2);
+      border-radius: var(--rl);
+      backdrop-filter: blur(24px);
+      box-shadow: 0 0 0 1px rgba(108,99,255,.1), 0 24px 80px rgba(0,0,0,.6);
+      text-align: center;
+    }
+    .auth-logo {
+      display: inline-flex; align-items: center; gap: .6rem;
+      margin-bottom: 1.75rem;
+    }
+    .auth-mark {
+      width: 42px; height: 42px; border-radius: 11px;
+      background: linear-gradient(135deg, var(--c-ov), var(--c-me));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--fd); font-weight: 800; font-size: 1.2rem; color: #fff;
+    }
+    .auth-wordmark {
+      font-family: var(--fd); font-weight: 800;
+      font-size: 1.55rem; letter-spacing: -.02em;
+    }
+    .auth-tag {
+      font-size: .84rem; color: var(--text2); line-height: 1.6;
+      margin-bottom: 2.5rem;
+    }
+    .btn-google {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: .75rem; width: 100%;
+      padding: .875rem 1.5rem;
+      background: var(--surf2); border: 1px solid var(--border2);
+      border-radius: var(--r); color: var(--text);
+      font-size: .95rem; font-weight: 500;
+      transition: background .18s, border-color .18s, transform .18s, box-shadow .18s;
+    }
+    .btn-google:hover:not(:disabled) {
+      background: var(--surf); border-color: rgba(255,255,255,.22);
+      transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,.35);
+    }
+    .btn-google:disabled { opacity: .55; cursor: not-allowed; }
+
+    /* ─── SETUP SCREEN ──────────────────────────────────────── */
+    .setup-card {
+      position: relative; z-index: 1;
+      width: min(520px, 94vw);
+      padding: 2.5rem 2.5rem 2rem;
+      background: rgba(18,21,36,.84);
+      border: 1px solid var(--border2);
+      border-radius: var(--rl);
+      backdrop-filter: blur(24px);
+      box-shadow: 0 0 0 1px rgba(255,184,0,.08), 0 24px 80px rgba(0,0,0,.65);
+    }
+    .setup-head { display:flex; align-items:center; gap:.875rem; margin-bottom:1.5rem; }
+    .setup-badge {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink:0;
+      background: linear-gradient(135deg, #ffb800, #ff4757);
+      display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
+    }
+    .setup-title { font-family: var(--fd); font-size: 1.15rem; font-weight: 800; }
+    .setup-sub { font-size: .78rem; color: var(--text2); margin-top: .15rem; }
+    .setup-steps {
+      counter-reset: steps; list-style: none;
+      margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: .5rem;
+    }
+    .setup-steps li {
+      counter-increment: steps;
+      display: flex; align-items: flex-start; gap: .65rem;
+      font-size: .82rem; color: var(--text2); line-height: 1.55;
+    }
+    .setup-steps li::before {
+      content: counter(steps); min-width: 20px; height: 20px;
+      border-radius: 50%; background: var(--surf2); border: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .68rem; font-weight: 700; color: var(--text3); flex-shrink: 0; margin-top: 2px;
+    }
+    .setup-steps code {
+      font-family: 'Menlo','Monaco','Consolas',monospace;
+      background: var(--surf); padding: .1rem .35rem; border-radius: 4px;
+      font-size: .75rem; color: var(--c-me);
+    }
+    .setup-ta {
+      width: 100%; min-height: 126px;
+      background: var(--surf); border: 1px solid var(--border2);
+      border-radius: var(--r); padding: .75rem 1rem;
+      color: var(--text); font-family: 'Menlo','Monaco','Consolas',monospace;
+      font-size: .77rem; line-height: 1.65; resize: vertical; outline: none;
+      transition: border-color .15s; margin-bottom: .625rem;
+    }
+    .setup-ta:focus { border-color: var(--c-ov); }
+    .setup-ta.ok  { border-color: rgba(0,229,160,.6); }
+    .setup-ta.bad { border-color: rgba(255,71,87,.5); }
+    .setup-chips {
+      display: flex; flex-wrap: wrap; gap: .35rem;
+      min-height: 26px; margin-bottom: .625rem;
+    }
+    .setup-chip {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .2rem .55rem; border-radius: 99px; font-size: .71rem; font-weight: 500;
+      background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.22); color: var(--c-re);
+    }
+    .setup-chip svg { width: 9px; height: 9px; flex-shrink: 0; }
+    .setup-err { font-size: .78rem; color: var(--c-to); min-height: 1.2em; margin-bottom: .75rem; }
+    .setup-foot { display:flex; align-items:center; justify-content:flex-end; }
+    .btn-connect {
+      display: inline-flex; align-items: center; gap: .45rem;
+      padding: .65rem 1.375rem; background: var(--c-ov); border: none;
+      border-radius: var(--r); color: #fff; font-size: .9rem; font-weight: 600;
+      transition: filter .18s, transform .18s, box-shadow .18s;
+    }
+    .btn-connect:hover:not(:disabled) {
+      filter: brightness(1.18); transform: translateY(-1px);
+      box-shadow: 0 4px 18px rgba(108,99,255,.45);
+    }
+    .btn-connect:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-reconfig {
+      background: none; border: none; color: var(--text3); font-size: .75rem;
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .25rem .5rem; border-radius: 5px; transition: color .15s;
+    }
+    .btn-reconfig:hover { color: var(--text2); }
+    .btn-reconfig svg { width: 12px; height: 12px; }
+
+    /* ─── SHELL ─────────────────────────────────────────────── */
+    .shell { display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ─── HEADER ────────────────────────────────────────────── */
+    .hdr {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 58px;
+      background: rgba(7,8,16,.88); border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+    }
+    .hdr-l { display: flex; align-items: center; gap: .875rem; }
+    .hdr-mark {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--c-ov), var(--c-me));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--fd); font-weight: 800; font-size: .9rem; color: #fff;
+      cursor: pointer; flex-shrink: 0; transition: opacity .15s;
+    }
+    .hdr-mark:hover { opacity: .8; }
+    .bc { display: flex; align-items: center; gap: .45rem; font-size: .84rem; }
+    .bc-link { color: var(--text2); cursor: pointer; transition: color .15s; }
+    .bc-link:hover { color: var(--text); }
+    .bc-sep { color: var(--text3); font-size: .72rem; }
+    .bc-cur { color: var(--text); font-weight: 500; }
+    .hdr-r { display: flex; align-items: center; gap: .875rem; }
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      overflow: hidden; border: 1.5px solid var(--border2); flex-shrink: 0;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-init {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--c-ov), var(--c-cl));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .75rem; color: #fff;
+    }
+    .btn-so {
+      background: none; border: 1px solid var(--border);
+      color: var(--text2); padding: .3rem .8rem; border-radius: 6px;
+      font-size: .78rem; transition: border-color .15s, color .15s;
+    }
+    .btn-so:hover { border-color: var(--border2); color: var(--text); }
+
+    /* ─── MAIN ──────────────────────────────────────────────── */
+    .main {
+      flex: 1; padding: 2.25rem 2rem;
+      max-width: 1440px; margin: 0 auto; width: 100%;
+    }
+
+    /* ─── PROJECTS VIEW ─────────────────────────────────────── */
+    .pv-hdr {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap;
+    }
+    .pv-title { font-family: var(--fd); font-size: 2rem; font-weight: 800; letter-spacing: -.03em; }
+    .pv-sub { font-size: .84rem; color: var(--text2); margin-top: .2rem; }
+    .pv-controls { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+    .limit-bar { display: flex; align-items: center; gap: .65rem; font-size: .78rem; color: var(--text2); }
+    .limit-track {
+      width: 72px; height: 4px; background: var(--surf2); border-radius: 2px; overflow: hidden;
+    }
+    .limit-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--c-ov), var(--c-me));
+      border-radius: 2px; transition: width .4s ease;
+    }
+    .limit-fill.warn { background: linear-gradient(90deg, var(--c-ac), var(--c-to)); }
+    .limit-fill.full { background: var(--c-to); }
+
+    .btn-new {
+      display: inline-flex; align-items: center; gap: .45rem;
+      padding: .6rem 1.2rem;
+      background: var(--c-ov); border: none; border-radius: var(--r);
+      color: #fff; font-size: .875rem; font-weight: 600;
+      transition: filter .18s, transform .18s, box-shadow .18s;
+    }
+    .btn-new:hover:not(:disabled) {
+      filter: brightness(1.18); transform: translateY(-1px);
+      box-shadow: 0 4px 18px rgba(108,99,255,.45);
+    }
+    .btn-new:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-new svg { flex-shrink: 0; }
+
+    .pg { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 1.125rem; }
+
+    .pc {
+      position: relative;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: var(--rl); padding: 1.5rem;
+      cursor: pointer; transition: border-color .2s, transform .2s, box-shadow .2s;
+      overflow: hidden; outline: none;
+    }
+    .pc::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; opacity: 0; transition: opacity .2s;
+      background: var(--pc-color, var(--c-ov));
+    }
+    .pc:hover, .pc:focus-visible { border-color: var(--border2); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+    .pc:hover::after, .pc:focus-visible::after { opacity: 1; }
+    .pc-icon {
+      width: 42px; height: 42px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; margin-bottom: 1rem;
+    }
+    .pc-name { font-family: var(--fd); font-size: 1.05rem; font-weight: 700; letter-spacing: -.01em; word-break: break-word; margin-bottom: .4rem; }
+    .pc-meta { font-size: .75rem; color: var(--text3); }
+    .pc-actions {
+      position: absolute; top: 1rem; right: 1rem;
+      display: flex; gap: .3rem; opacity: 0; transition: opacity .18s;
+    }
+    .pc:hover .pc-actions, .pc:focus-within .pc-actions { opacity: 1; }
+    .ib {
+      width: 26px; height: 26px; border-radius: 6px;
+      border: 1px solid var(--border2); background: var(--surf);
+      color: var(--text2); display: flex; align-items: center; justify-content: center;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .ib:hover { background: var(--surf2); color: var(--text); }
+    .ib.d:hover { background: rgba(255,71,87,.15); border-color: var(--c-to); color: var(--c-to); }
+    .ib svg { width: 12px; height: 12px; pointer-events: none; }
+
+    .pc-new {
+      border-style: dashed; border-color: var(--border2);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: .7rem; min-height: 144px;
+      color: var(--text3); background: none;
+      transition: border-color .2s, color .2s, background .2s, transform .2s;
+    }
+    .pc-new:hover, .pc-new:focus-visible {
+      border-color: var(--c-ov); color: var(--c-ov);
+      background: rgba(108,99,255,.04); transform: translateY(-2px);
+    }
+    .pc-new-ring {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1.5px dashed currentColor;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem; transition: transform .25s;
+    }
+    .pc-new:hover .pc-new-ring, .pc-new:focus-visible .pc-new-ring { transform: rotate(90deg) scale(1.1); }
+
+    /* ─── CANVAS VIEW ───────────────────────────────────────── */
+    .cv-hdr { margin-bottom: 2rem; }
+    .cv-title { font-family: var(--fd); font-size: 2rem; font-weight: 800; letter-spacing: -.03em; margin-bottom: .2rem; }
+    .cv-sub { font-size: .84rem; color: var(--text2); }
+
+    .cg { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.375rem; align-items: start; }
+
+    .sc {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: var(--rl); overflow: hidden;
+      border-left: 4px solid var(--sc-color, var(--border));
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .sc:hover {
+      box-shadow: 0 0 0 1px var(--sc-color, var(--border2)), 0 8px 32px rgba(0,0,0,.35);
+      border-color: var(--sc-color, var(--border2));
+    }
+    .sc-hdr {
+      display: flex; align-items: center; gap: .65rem;
+      padding: .875rem 1.125rem; border-bottom: 1px solid var(--border);
+    }
+    .sc-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .sc-label {
+      font-family: var(--fd); font-size: .72rem; font-weight: 800;
+      letter-spacing: .08em; text-transform: uppercase;
+    }
+    .sc-ct {
+      margin-left: auto; font-size: .7rem; padding: .175rem .5rem;
+      border-radius: 99px; background: var(--surf); color: var(--text3);
+    }
+    .sc-body { padding: .875rem 1.125rem; display: flex; flex-direction: column; gap: .875rem; }
+
+    .fg { display: flex; flex-direction: column; gap: .375rem; }
+    .fl {
+      font-size: .68rem; font-weight: 600; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--text3);
+      padding-bottom: .25rem; border-bottom: 1px solid var(--border);
+    }
+    .nl { display: flex; flex-direction: column; gap: .3rem; }
+
+    .ni {
+      position: relative;
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: 7px; padding: .55rem .8rem;
+      font-size: .855rem; line-height: 1.55; color: var(--text2);
+      border-left: 2px solid transparent;
+      transition: border-color .15s, color .15s;
+      animation: ni-in .18s ease both;
+    }
+    @keyframes ni-in { from { opacity: 0; transform: translateY(-3px) scale(.98); } to { opacity: 1; transform: none; } }
+    .ni:hover { border-color: var(--border2); color: var(--text); }
+    .ni.ed { border-left-color: var(--sc-color, var(--c-ov)); background: var(--surf2); color: var(--text); }
+    .ni-acts {
+      position: absolute; top: 50%; right: .4rem; transform: translateY(-50%);
+      display: flex; gap: .2rem; opacity: 0; transition: opacity .15s;
+    }
+    .ni:hover .ni-acts { opacity: 1; }
+    .nb {
+      width: 20px; height: 20px; border-radius: 4px; border: none;
+      background: var(--surf2); color: var(--text3);
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s, color .15s;
+    }
+    .nb:hover { background: var(--border2); color: var(--text); }
+    .nb.d:hover { background: rgba(255,71,87,.2); color: var(--c-to); }
+    .nb svg { width: 10px; height: 10px; pointer-events: none; }
+
+    .ni-edit-ta {
+      width: 100%; background: none; border: none; outline: none;
+      color: var(--text); font-size: .855rem; line-height: 1.55;
+      resize: none; padding-right: 1rem;
+    }
+    .ni-edit-acts { display: flex; gap: .35rem; justify-content: flex-end; margin-top: .4rem; }
+
+    .btn-save {
+      padding: .225rem .625rem; background: var(--c-ov); border: none;
+      border-radius: 5px; color: #fff; font-size: .74rem; font-weight: 600;
+      transition: filter .15s;
+    }
+    .btn-save:hover:not(:disabled) { filter: brightness(1.2); }
+    .btn-save:disabled { opacity: .45; cursor: not-allowed; }
+
+    .btn-can {
+      padding: .225rem .625rem; background: var(--surf2);
+      border: 1px solid var(--border2); border-radius: 5px;
+      color: var(--text2); font-size: .74rem;
+      transition: color .15s;
+    }
+    .btn-can:hover { color: var(--text); }
+
+    .add-form { margin-top: .2rem; }
+    .add-ta {
+      width: 100%; background: var(--surf);
+      border: 1px solid var(--sc-color, var(--c-ov));
+      border-radius: 7px; padding: .55rem .8rem;
+      color: var(--text); font-size: .855rem; line-height: 1.55;
+      resize: none; outline: none;
+      transition: border-color .15s;
+    }
+    .add-ta:focus { border-color: var(--c-me); }
+    .add-acts { display: flex; gap: .4rem; justify-content: flex-end; margin-top: .4rem; }
+
+    .btn-add {
+      display: inline-flex; align-items: center; gap: .35rem;
+      width: 100%; padding: .375rem .8rem;
+      background: none; border: 1px dashed var(--border2);
+      border-radius: 7px; color: var(--text3); font-size: .78rem;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .btn-add:hover { border-color: var(--sc-color, var(--text2)); color: var(--sc-color, var(--text2)); background: rgba(255,255,255,.02); }
+    .btn-add svg { width: 11px; height: 11px; flex-shrink: 0; }
+
+    /* ─── MODAL ─────────────────────────────────────────────── */
+    .mo {
+      position: fixed; inset: 0; z-index: 900;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(5px);
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+      animation: fade .15s ease;
+    }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    .mo-box {
+      background: var(--bg3); border: 1px solid var(--border2);
+      border-radius: var(--rl); padding: 2rem;
+      width: min(420px, 100%);
+      box-shadow: 0 24px 80px rgba(0,0,0,.6);
+      animation: mo-in .2s ease;
+    }
+    @keyframes mo-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+    .mo-title { font-family: var(--fd); font-size: 1.2rem; font-weight: 700; margin-bottom: 1.125rem; }
+    .mo-input {
+      width: 100%; background: var(--surf); border: 1px solid var(--border2);
+      border-radius: var(--r); padding: .7rem 1rem;
+      color: var(--text); font-size: .95rem; outline: none;
+      margin-bottom: 1.125rem; transition: border-color .15s;
+    }
+    .mo-input:focus { border-color: var(--c-ov); }
+    .mo-acts { display: flex; gap: .65rem; justify-content: flex-end; }
+
+    /* ─── TOAST ─────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 1000;
+      display: flex; align-items: center; gap: .65rem;
+      padding: .8rem 1.125rem; border-radius: var(--r);
+      font-size: .855rem; max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      animation: slide-up .2s ease;
+    }
+    @keyframes slide-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .toast.success { background: rgba(0,229,160,.12); border: 1px solid rgba(0,229,160,.3); color: #00e5a0; }
+    .toast.error   { background: rgba(255,71,87,.12);  border: 1px solid rgba(255,71,87,.3);  color: #ff4757; }
+    .toast.info    { background: rgba(0,212,255,.12);  border: 1px solid rgba(0,212,255,.3);  color: #00d4ff; }
+
+    /* ─── SKELETON ──────────────────────────────────────────── */
+    .sk {
+      background: linear-gradient(90deg, var(--surf) 25%, var(--surf2) 50%, var(--surf) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite; border-radius: var(--rl);
+    }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+    /* ─── SPINNER ───────────────────────────────────────────── */
+    .spin {
+      width: 18px; height: 18px; flex-shrink: 0;
+      border: 2px solid var(--border2); border-top-color: var(--c-ov);
+      border-radius: 50%; animation: rot .65s linear infinite;
+    }
+    @keyframes rot { to { transform: rotate(360deg); } }
+
+    /* ─── RESPONSIVE ────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .hdr { padding: 0 1rem; }
+      .main { padding: 1.5rem 1rem; }
+      .cg, .pg { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .pv-hdr { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ─── FOCUS VISIBLE ─────────────────────────────────────── */
+    :focus-visible { outline: 2px solid var(--c-ov); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+
+<div x-data="app()" x-init="init()" x-cloak>
+
+  <!-- ═══ SETUP ═══════════════════════════════════════════════ -->
+  <div x-show="view==='setup'" class="auth" role="main" aria-labelledby="setup-title">
+    <div class="auth-mesh" aria-hidden="true"></div>
+    <div class="auth-grid" aria-hidden="true"></div>
+    <div class="setup-card">
+      <div class="setup-head">
+        <div class="setup-badge" aria-hidden="true">🔑</div>
+        <div>
+          <div class="setup-title" id="setup-title">Connect Firebase</div>
+          <div class="setup-sub">One-time setup — config saved in your browser</div>
+        </div>
+      </div>
+      <ol class="setup-steps" aria-label="Setup instructions">
+        <li>Open the Firebase Console → your project → <code>Project settings</code></li>
+        <li>Scroll to <strong style="color:var(--text)">Your apps</strong> → pick or create a Web app</li>
+        <li>Copy the <code>firebaseConfig</code> object and paste it below</li>
+      </ol>
+      <textarea
+        class="setup-ta"
+        :class="{ ok: setupParsed, bad: setupErr && setupInput.trim() }"
+        x-model="setupInput"
+        @input="liveParseConfig()"
+        @keydown.ctrl.enter.prevent="applyConfig()"
+        placeholder="Paste your firebaseConfig here…
+
+const firebaseConfig = {
+  apiKey: &quot;AIza...&quot;,
+  authDomain: &quot;my-app.firebaseapp.com&quot;,
+  projectId: &quot;my-app&quot;,
+  storageBucket: &quot;my-app.appspot.com&quot;,
+  messagingSenderId: &quot;123456&quot;,
+  appId: &quot;1:123456:web:abc&quot;
+};"
+        aria-label="Firebase config"
+        spellcheck="false"
+        autocomplete="off"
+      ></textarea>
+      <div class="setup-chips" aria-live="polite">
+        <template x-if="setupParsed">
+          <span style="display:contents">
+            <template x-for="f in ['projectId','authDomain','appId']" :key="f">
+              <template x-if="setupParsed[f]">
+                <span class="setup-chip">
+                  <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1.5 5l2.5 2.5 4.5-4.5"/></svg>
+                  <span x-text="f"></span>
+                </span>
+              </template>
+            </template>
+          </span>
+        </template>
+      </div>
+      <div class="setup-err" role="alert" x-text="setupErr"></div>
+      <div class="setup-foot">
+        <button
+          class="btn-connect"
+          @click="applyConfig()"
+          :disabled="!setupParsed || busy"
+          aria-label="Connect Firebase"
+        >
+          <template x-if="busy">
+            <div class="spin" style="width:15px;height:15px;border-width:2px" aria-hidden="true"></div>
+          </template>
+          <template x-if="!busy">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M2 6.5h9M7 2l4 4.5L7 11"/></svg>
+          </template>
+          Connect
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ AUTH ════════════════════════════════════════════════ -->
+  <div x-show="view==='auth'" class="auth" role="main">
+    <div class="auth-mesh" aria-hidden="true"></div>
+    <div class="auth-grid" aria-hidden="true"></div>
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-mark" aria-hidden="true">G</div>
+        <span class="auth-wordmark">GrowthOS</span>
+      </div>
+      <p class="auth-tag">B2B Decision Support System<br>Map your growth strategy on one canvas</p>
+      <button class="btn-google" @click="signIn()" :disabled="busy" aria-label="Sign in with Google">
+        <template x-if="!busy">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+        </template>
+        <template x-if="busy"><div class="spin" aria-hidden="true"></div></template>
+        <span x-text="busy ? 'Signing in…' : 'Continue with Google'"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ SHELL ════════════════════════════════════════════════ -->
+  <div x-show="view!=='auth' && view!=='setup'" class="shell">
+
+    <!-- HEADER -->
+    <header class="hdr" role="banner">
+      <div class="hdr-l">
+        <div class="hdr-mark" @click="goProjets()" @keydown.enter="goProjets()" tabindex="0" role="button" aria-label="Home" title="GrowthOS">G</div>
+        <nav class="bc" aria-label="Breadcrumb">
+          <span class="bc-link" @click="goProjets()" @keydown.enter="goProjets()" tabindex="0" role="button">Projects</span>
+          <template x-if="view==='canvas' && currentProject">
+            <span style="display:contents">
+              <span class="bc-sep" aria-hidden="true">›</span>
+              <span class="bc-cur" x-text="currentProject.name"></span>
+            </span>
+          </template>
+        </nav>
+      </div>
+      <div class="hdr-r">
+        <template x-if="user">
+          <span style="display:contents">
+            <template x-if="user.photoURL">
+              <div class="avatar"><img :src="user.photoURL" :alt="user.displayName||'User'" referrerpolicy="no-referrer"></div>
+            </template>
+            <template x-if="!user.photoURL">
+              <div class="avatar-init" :title="user.displayName||user.email">
+                <span x-text="(user.displayName||user.email||'U')[0].toUpperCase()"></span>
+              </div>
+            </template>
+            <button class="btn-so" @click="signOutUser()">Sign out</button>
+          </span>
+        </template>
+        <button class="btn-reconfig" @click="clearConfig()" title="Reconfigure Firebase" aria-label="Reconfigure Firebase connection">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.9 2.9l1.05 1.05M10.05 10.05l1.05 1.05M2.9 11.1l1.05-1.05M10.05 3.95l1.05-1.05"/><circle cx="7" cy="7" r="2.5"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main" aria-live="polite" aria-atomic="false">
+
+      <!-- ─── PROJECTS VIEW ──────────────────────────────────── -->
+      <div x-show="view==='projects'">
+        <div class="pv-hdr">
+          <div>
+            <h1 class="pv-title">Your Projects</h1>
+            <p class="pv-sub">Select a project to open its Growth Canvas</p>
+          </div>
+          <div class="pv-controls">
+            <div class="limit-bar">
+              <div class="limit-track" role="progressbar" :aria-valuenow="projects.length" aria-valuemin="0" aria-valuemax="10" :aria-label="`${projects.length} of 10 projects used`">
+                <div class="limit-fill"
+                  :class="{ warn: projects.length>=8, full: projects.length>=10 }"
+                  :style="`width:${projects.length*10}%`">
+                </div>
+              </div>
+              <span x-text="`${projects.length}/10`"></span>
+            </div>
+            <button class="btn-new" @click="openCreate()" :disabled="projects.length>=10" aria-label="Create new project">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 1v10M1 6h10"/></svg>
+              New Project
+            </button>
+          </div>
+        </div>
+
+        <!-- Skeletons -->
+        <template x-if="loadingP">
+          <div class="pg" aria-label="Loading…">
+            <div class="sk" style="height:144px"></div>
+            <div class="sk" style="height:144px"></div>
+            <div class="sk" style="height:144px"></div>
+          </div>
+        </template>
+
+        <!-- Grid -->
+        <template x-if="!loadingP">
+          <div class="pg" role="list">
+            <template x-for="(p, i) in projects" :key="p.id">
+              <article
+                class="pc" role="listitem" tabindex="0"
+                @click="openCanvas(p)" @keydown.enter="openCanvas(p)"
+                :aria-label="`Open ${p.name}`"
+                :style="`--pc-color:${SECTIONS[i%SECTIONS.length].color}`"
+              >
+                <div class="pc-icon" :style="`background:${SECTIONS[i%SECTIONS.length].color}1a`" aria-hidden="true">📈</div>
+                <div class="pc-name" x-text="p.name"></div>
+                <div class="pc-meta" x-text="`Updated ${fmtDate(p.updated_at)}`"></div>
+                <div class="pc-actions" role="group" :aria-label="`Actions for ${p.name}`">
+                  <button class="ib" @click.stop="openRename(p)" title="Rename" aria-label="Rename">
+                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M9.5 1.5l3 3-8 8H1.5v-3l8-8z"/></svg>
+                  </button>
+                  <button class="ib d" @click.stop="deleteProject(p.id)" title="Delete" aria-label="Delete">
+                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M1.5 3.5h11M4.5 3.5V2h5v1.5M5 6v5M9 6v5M2.5 3.5l1 9h7l1-9"/></svg>
+                  </button>
+                </div>
+              </article>
+            </template>
+
+            <template x-if="projects.length < 10">
+              <button class="pc pc-new" @click="openCreate()" aria-label="Create new project">
+                <div class="pc-new-ring" aria-hidden="true">+</div>
+                <span style="font-size:.82rem;font-weight:500">New Project</span>
+              </button>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <!-- ─── CANVAS VIEW ────────────────────────────────────── -->
+      <div x-show="view==='canvas'">
+        <template x-if="currentProject">
+          <div>
+            <div class="cv-hdr">
+              <h1 class="cv-title" x-text="currentProject.name"></h1>
+              <p class="cv-sub">Growth Strategy Canvas — add notes to each field</p>
+            </div>
+
+            <!-- Skeletons -->
+            <template x-if="loadingC">
+              <div class="cg">
+                <div class="sk" style="height:220px"></div>
+                <div class="sk" style="height:220px"></div>
+                <div class="sk" style="height:220px"></div>
+                <div class="sk" style="height:160px"></div>
+              </div>
+            </template>
+
+            <!-- Canvas sections -->
+            <template x-if="!loadingC">
+              <div class="cg" role="region" aria-label="Growth Canvas">
+                <template x-for="sec in SECTIONS" :key="sec.key">
+                  <section
+                    class="sc"
+                    :style="`--sc-color:${sec.color}`"
+                    :aria-labelledby="`sh-${sec.key}`"
+                  >
+                    <div class="sc-hdr">
+                      <div class="sc-dot" :style="`background:${sec.color}`" aria-hidden="true"></div>
+                      <h2 class="sc-label" :id="`sh-${sec.key}`" x-text="sec.label" :style="`color:${sec.color}`"></h2>
+                      <span class="sc-ct" x-text="secCount(sec.key)" aria-live="polite"></span>
+                    </div>
+                    <div class="sc-body">
+                      <template x-for="fld in sec.fields" :key="fld.key">
+                        <div class="fg">
+                          <div class="fl" x-text="fld.label"></div>
+                          <div class="nl" role="list">
+                            <template x-for="note in getNotes(sec.key, fld.key)" :key="note.id">
+                              <div
+                                class="ni" role="listitem"
+                                :class="{ ed: editN && editN.id===note.id }"
+                                :style="editN && editN.id===note.id ? `border-left-color:${sec.color}` : ''"
+                              >
+                                <!-- editing -->
+                                <template x-if="editN && editN.id===note.id">
+                                  <div>
+                                    <textarea
+                                      class="ni-edit-ta"
+                                      x-model="editN.content"
+                                      @keydown.escape="cancelEdit()"
+                                      @keydown.ctrl.enter.prevent="saveEdit()"
+                                      :aria-label="`Edit note in ${fld.label}`"
+                                      rows="3"
+                                      x-init="$el.focus()"
+                                    ></textarea>
+                                    <div class="ni-edit-acts">
+                                      <button class="btn-can" @click="cancelEdit()">Cancel</button>
+                                      <button class="btn-save" @click="saveEdit()" :disabled="!editN.content.trim()">Save</button>
+                                    </div>
+                                  </div>
+                                </template>
+                                <!-- viewing -->
+                                <template x-if="!(editN && editN.id===note.id)">
+                                  <div>
+                                    <span x-text="note.content" style="display:block;padding-right:2.5rem"></span>
+                                    <div class="ni-acts">
+                                      <button class="nb" @click="startEdit(note)" title="Edit" aria-label="Edit note">
+                                        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 1.5l2.5 2.5-7 7H1v-2.5l7-7z"/></svg>
+                                      </button>
+                                      <button class="nb d" @click="deleteNote(note,sec.key,fld.key)" title="Delete" aria-label="Delete note">
+                                        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M1 3h10M3.5 3V2h5v1M2 3l.9 8h6.2l.9-8"/></svg>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </template>
+                              </div>
+                            </template>
+                          </div>
+
+                          <!-- add form -->
+                          <template x-if="addN && addN.sec===sec.key && addN.fld===fld.key">
+                            <div class="add-form">
+                              <textarea
+                                class="add-ta"
+                                x-model="newContent"
+                                :placeholder="`Add a note to ${fld.label}…`"
+                                @keydown.escape="cancelAdd()"
+                                @keydown.ctrl.enter.prevent="submitNote(sec.key,fld.key)"
+                                rows="3"
+                                x-init="$el.focus()"
+                                :aria-label="`New note in ${fld.label}`"
+                              ></textarea>
+                              <div class="add-acts">
+                                <button class="btn-can" @click="cancelAdd()">Cancel</button>
+                                <button class="btn-save" @click="submitNote(sec.key,fld.key)" :disabled="!newContent.trim()">Add</button>
+                              </div>
+                            </div>
+                          </template>
+                          <template x-if="!(addN && addN.sec===sec.key && addN.fld===fld.key)">
+                            <button
+                              class="btn-add"
+                              @click="startAdd(sec.key,fld.key)"
+                              :aria-label="`Add note to ${fld.label}`"
+                            >
+                              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 1v10M1 6h10"/></svg>
+                              Add note
+                            </button>
+                          </template>
+                        </div>
+                      </template>
+                    </div>
+                  </section>
+                </template>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+
+    </main>
+  </div><!-- /shell -->
+
+  <!-- ═══ MODAL ════════════════════════════════════════════════ -->
+  <div
+    x-show="modal.open"
+    class="mo"
+    @click.self="closeModal()"
+    @keydown.escape.window="closeModal()"
+    role="dialog"
+    aria-modal="true"
+    :aria-labelledby="'mo-title'"
+    x-cloak
+  >
+    <div class="mo-box">
+      <h2 class="mo-title" id="mo-title" x-text="modal.title"></h2>
+      <input
+        class="mo-input"
+        type="text"
+        :placeholder="modal.placeholder"
+        x-model="modal.value"
+        @keydown.enter="modal.onConfirm()"
+        maxlength="100"
+        x-ref="mi"
+        :aria-label="modal.title"
+      >
+      <div class="mo-acts">
+        <button class="btn-can" style="padding:.4rem 1rem;font-size:.875rem" @click="closeModal()">Cancel</button>
+        <button class="btn-save" style="padding:.4rem 1.125rem;font-size:.875rem" @click="modal.onConfirm()" :disabled="!modal.value.trim()" x-text="modal.label"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TOAST ════════════════════════════════════════════════ -->
+  <div
+    x-show="toast"
+    class="toast"
+    :class="toast && toast.type"
+    role="status"
+    aria-live="polite"
+    x-cloak
+  >
+    <span x-text="toast && toast.msg"></span>
+  </div>
+
+</div><!-- /x-data -->
+
+<script>
+  const API = 'http://localhost:8000';
+
+  const SECTIONS = [
+    { key:'project_overview', label:'Project Overview', color:'#6c63ff',
+      fields:[
+        {key:'unique_value_proposition',label:'Unique Value Proposition'},
+        {key:'secret_sauce',label:'Secret Sauce'},
+        {key:'core_value',label:'Core Value'},
+        {key:'target_customers',label:'Target Customers'},
+        {key:'why',label:'Why'},
+      ]
+    },
+    { key:'metrics', label:'Metrics', color:'#00d4ff',
+      fields:[
+        {key:'formula',label:'Growth Formula'},
+        {key:'north_star_metric',label:'North Star Metric'},
+      ]
+    },
+    { key:'retention', label:'Retention', color:'#00e5a0',
+      fields:[
+        {key:'short_term',label:'Short Term'},
+        {key:'medium_term',label:'Medium Term'},
+        {key:'long_term',label:'Long Term'},
+      ]
+    },
+    { key:'acquisition', label:'Acquisition', color:'#ffb800',
+      fields:[
+        {key:'language_market_fit',label:'Language-Market Fit'},
+        {key:'channel_product_fit',label:'Channel-Product Fit'},
+      ]
+    },
+    { key:'toolbox', label:'Toolbox', color:'#ff4757',
+      fields:[
+        {key:'data_mining',label:'Data Mining'},
+        {key:'social_tracking',label:'Social Tracking'},
+        {key:'ads_tracking',label:'Ads Tracking'},
+        {key:'surveys',label:'Surveys'},
+        {key:'other',label:'Other'},
+      ]
+    },
+    { key:'high_tempo_testing', label:'High-Tempo Testing', color:'#a855f7',
+      fields:[
+        {key:'framework',label:'Framework'},
+        {key:'frequency',label:'Frequency'},
+      ]
+    },
+    { key:'customer_loops', label:'Customer Loops', color:'#ff6b6b',
+      fields:[
+        {key:'payload',label:'Payload'},
+        {key:'conversion_rate',label:'Conversion Rate'},
+        {key:'frequency',label:'Frequency'},
+      ]
+    },
+  ];
+
+  function app() {
+    return {
+      /* ── state ── */
+      view: 'auth',
+      user: null,
+      token: null,
+      busy: false,
+
+      projects: [],
+      loadingP: false,
+
+      currentProject: null,
+      canvas: null,
+      loadingC: false,
+
+      editN: null,
+      addN: null,
+      newContent: '',
+
+      modal: { open:false, title:'', placeholder:'', value:'', label:'OK', onConfirm:()=>{} },
+      toast: null,
+      _tt: null,
+
+      /* setup state */
+      setupInput: '',
+      setupParsed: null,
+      setupErr: '',
+
+      SECTIONS,
+
+      /* ── lifecycle ── */
+      init() {
+        if (window._needsSetup) { this.view = 'setup'; return; }
+        this._listenAuth();
+      },
+
+      _listenAuth() {
+        firebase.auth().onAuthStateChanged(async u => {
+          if (u) {
+            this.user = u;
+            this.token = await u.getIdToken();
+            if (this.view === 'auth' || this.view === 'setup') {
+              this.view = 'projects';
+              await this.loadProjects();
+            }
+          } else {
+            this.user = null; this.token = null;
+            if (this.view !== 'setup') this.view = 'auth';
+          }
+        });
+      },
+
+      /* ── firebase setup ── */
+      liveParseConfig() {
+        this.setupErr = '';
+        const t = this.setupInput.trim();
+        if (!t) { this.setupParsed = null; return; }
+        const cfg = this._parseConfig(t);
+        if (cfg) { this.setupParsed = cfg; }
+        else { this.setupParsed = null; this.setupErr = 'Cannot parse config — paste the full firebaseConfig object.'; }
+      },
+
+      _parseConfig(text) {
+        // Try plain JSON
+        try {
+          const c = JSON.parse(text);
+          if (c && c.apiKey && !c.apiKey.startsWith('YOUR_')) return c;
+        } catch {}
+        // Extract from JS object literal (handles `const x = { … }` or bare `{ … }`)
+        const keys = ['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId','measurementId'];
+        const out = {};
+        for (const k of keys) {
+          const m = text.match(new RegExp(k + '\\s*:\\s*["\`\']((?:[^"\`\'\\\\]|\\\\.)*)'));
+          if (m) out[k] = m[1];
+        }
+        return (out.apiKey && !out.apiKey.startsWith('YOUR_')) ? out : null;
+      },
+
+      async applyConfig() {
+        if (!this.setupParsed) return;
+        this.busy = true;
+        try {
+          if (!firebase.apps.length) {
+            firebase.initializeApp(this.setupParsed);
+          }
+          // Quick smoke-test — if authDomain is wrong this will still succeed here;
+          // the real failure surfaces on first sign-in attempt, which is acceptable.
+          firebase.auth();
+          localStorage.setItem('growthos_config', JSON.stringify(this.setupParsed));
+          window._needsSetup = false;
+          this.notify('Firebase connected!', 'success');
+          this.view = 'auth';
+          this._listenAuth();
+        } catch(e) {
+          this.setupErr = 'Initialization failed: ' + (e.message || 'unknown error');
+          this.notify('Connection failed.', 'error');
+        } finally { this.busy = false; }
+      },
+
+      clearConfig() {
+        localStorage.removeItem('growthos_config');
+        this.notify('Config cleared — reloading…', 'info');
+        setTimeout(() => location.reload(), 900);
+      },
+
+      /* ── auth ── */
+      async signIn() {
+        this.busy = true;
+        try {
+          await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        } catch(e) {
+          if (e.code !== 'auth/popup-closed-by-user') this.notify('Sign in failed. Try again.','error');
+        } finally { this.busy = false; }
+      },
+
+      async signOutUser() {
+        this.view='auth'; this.projects=[]; this.currentProject=null; this.canvas=null;
+        await firebase.auth().signOut();
+      },
+
+      async tok() {
+        if (this.user) this.token = await this.user.getIdToken();
+        return this.token;
+      },
+
+      /* ── api ── */
+      async api(path, opts={}) {
+        const t = await this.tok();
+        const r = await fetch(`${API}${path}`, {
+          ...opts,
+          headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${t}`, ...(opts.headers||{}) }
+        });
+        if (r.status===401) { this.notify('Session expired.','error'); await this.signOutUser(); throw 401; }
+        if (r.status===403) { this.notify('Access denied.','error'); throw 403; }
+        if (r.status===404) throw 404;
+        if (r.status===409) { this.notify('Project limit (10) reached.','error'); throw 409; }
+        if (r.status===422) {
+          const b = await r.json().catch(()=>({}));
+          this.notify(b?.detail?.[0]?.msg||'Validation error.','error'); throw 422;
+        }
+        if (!r.ok) { this.notify('Request failed.','error'); throw r.status; }
+        if (r.status===204) return null;
+        return r.json();
+      },
+
+      /* ── projects ── */
+      async loadProjects() {
+        this.loadingP = true;
+        try { this.projects = await this.api('/projects'); }
+        catch(e){ console.error(e); }
+        finally { this.loadingP = false; }
+      },
+
+      goProjets() {
+        this.view='projects'; this.currentProject=null; this.canvas=null;
+        this.editN=null; this.addN=null;
+      },
+
+      openCreate() {
+        this.modal = { open:true, title:'New Project', placeholder:'e.g. My SaaS Growth Plan', value:'', label:'Create', onConfirm:()=>this.createProject() };
+        this.$nextTick(()=>this.$refs.mi?.focus());
+      },
+
+      openRename(p) {
+        this.modal = { open:true, title:'Rename Project', placeholder:'New name', value:p.name, label:'Save', onConfirm:()=>this.renameProject(p.id) };
+        this.$nextTick(()=>{ this.$refs.mi?.focus(); this.$refs.mi?.select(); });
+      },
+
+      closeModal() { this.modal.open=false; },
+
+      async createProject() {
+        const name = this.modal.value.trim(); if (!name) return;
+        this.closeModal();
+        try {
+          const p = await this.api('/projects',{ method:'POST', body:JSON.stringify({name}) });
+          this.projects.unshift(p);
+          this.notify(`"${p.name}" created`,'success');
+        } catch{}
+      },
+
+      async renameProject(id) {
+        const name = this.modal.value.trim(); if (!name) return;
+        this.closeModal();
+        const i = this.projects.findIndex(p=>p.id===id); if(i===-1)return;
+        const prev = this.projects[i].name;
+        this.projects[i] = {...this.projects[i], name};
+        if (this.currentProject?.id===id) this.currentProject={...this.currentProject,name};
+        try {
+          const up = await this.api(`/projects/${id}`,{method:'PATCH',body:JSON.stringify({name})});
+          this.projects[i]=up;
+        } catch {
+          this.projects[i]={...this.projects[i],name:prev};
+          if (this.currentProject?.id===id) this.currentProject={...this.currentProject,name:prev};
+        }
+      },
+
+      async deleteProject(id) {
+        if (!confirm('Delete this project and all its notes?\nThis cannot be undone.')) return;
+        const i=this.projects.findIndex(p=>p.id===id); if(i===-1)return;
+        const [gone]=this.projects.splice(i,1);
+        try { await this.api(`/projects/${id}`,{method:'DELETE'}); this.notify(`"${gone.name}" deleted`,'success'); }
+        catch { this.projects.splice(i,0,gone); }
+      },
+
+      /* ── canvas ── */
+      async openCanvas(p) {
+        this.currentProject=p; this.view='canvas';
+        this.canvas=null; this.editN=null; this.addN=null; this.loadingC=true;
+        try { this.canvas = await this.api(`/projects/${p.id}/canvas`); }
+        catch(e){ console.error(e); }
+        finally { this.loadingC=false; }
+      },
+
+      getNotes(sec,fld) { return this.canvas?.[sec]?.[fld]??[]; },
+
+      secCount(sec) {
+        const s=this.canvas?.[sec]; if(!s) return 0;
+        return Object.values(s).reduce((n,a)=>n+(a?.length??0),0);
+      },
+
+      /* ── notes ── */
+      startAdd(sec,fld) { this.addN={sec,fld}; this.newContent=''; this.editN=null; },
+      cancelAdd() { this.addN=null; this.newContent=''; },
+
+      async submitNote(sec,fld) {
+        const content=this.newContent.trim(); if(!content)return;
+        const tid='_'+Date.now();
+        const tmp={id:tid,content,section:sec,field:fld,order:0,created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
+        if(!this.canvas[sec]) this.canvas[sec]={};
+        if(!this.canvas[sec][fld]) this.canvas[sec][fld]=[];
+        this.canvas[sec][fld].push(tmp);
+        this.cancelAdd();
+        try {
+          const note=await this.api(`/projects/${this.currentProject.id}/notes`,{
+            method:'POST', body:JSON.stringify({section:sec,field:fld,content,order:0})
+          });
+          const arr=this.canvas[sec][fld], idx=arr.findIndex(n=>n.id===tid);
+          if(idx!==-1) arr.splice(idx,1,note);
+        } catch {
+          const arr=this.canvas[sec]?.[fld]; if(arr){const idx=arr.findIndex(n=>n.id===tid);if(idx!==-1)arr.splice(idx,1);}
+        }
+      },
+
+      startEdit(note) { this.editN={...note}; this.addN=null; },
+      cancelEdit() { this.editN=null; },
+
+      async saveEdit() {
+        const {id,section:sec,field:fld,content}=this.editN; if(!content.trim())return;
+        const arr=this.canvas[sec]?.[fld];
+        const i=arr?.findIndex(n=>n.id===id); const prev=arr?.[i];
+        if(i!==undefined&&i!==-1) arr[i]={...arr[i],content};
+        this.editN=null;
+        try {
+          const up=await this.api(`/projects/${this.currentProject.id}/notes/${id}`,{
+            method:'PATCH', body:JSON.stringify({content})
+          });
+          if(i!==undefined&&i!==-1) arr[i]=up;
+        } catch { if(i!==undefined&&i!==-1&&prev) arr[i]=prev; }
+      },
+
+      async deleteNote(note,sec,fld) {
+        const arr=this.canvas[sec]?.[fld]; if(!arr)return;
+        const i=arr.findIndex(n=>n.id===note.id); if(i===-1)return;
+        arr.splice(i,1);
+        try { await this.api(`/projects/${this.currentProject.id}/notes/${note.id}`,{method:'DELETE'}); }
+        catch { arr.splice(i,0,note); }
+      },
+
+      /* ── ui helpers ── */
+      notify(msg, type='info') {
+        this.toast={msg,type};
+        if(this._tt) clearTimeout(this._tt);
+        this._tt=setTimeout(()=>{ this.toast=null; },3500);
+      },
+
+      fmtDate(iso) {
+        if(!iso)return'';
+        const d=new Date(iso), now=new Date(), diff=now-d;
+        if(diff<60000)return'just now';
+        if(diff<3600000)return Math.floor(diff/60000)+'m ago';
+        if(diff<86400000)return Math.floor(diff/3600000)+'h ago';
+        return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      },
+    };
+  }
+</script>
+
+</body>
+</html>

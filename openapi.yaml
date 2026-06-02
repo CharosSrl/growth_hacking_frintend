@@ -1,0 +1,644 @@
+openapi: 3.1.0
+
+info:
+  title: GrowthOS API
+  version: 2.0.0
+  description: |
+    REST API for the GrowthOS B2B Decision Support System.
+
+    **Authentication**: every request must carry a Firebase ID Token obtained
+    after Google Sign-In.
+    ```
+    Authorization: Bearer <firebase_id_token>
+    ```
+
+    **Projects**: each user can own up to **10 projects**.
+    All canvas notes are scoped to a project.
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+
+security:
+  - FirebaseAuth: []
+
+tags:
+  - name: projects
+    description: Project management (max 10 per user)
+  - name: notes
+    description: Canvas note CRUD, scoped to a project
+  - name: canvas
+    description: Full canvas view for a project
+
+# ─────────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────────
+
+paths:
+
+  # ── Projects ─────────────────────────────
+
+  /projects:
+    get:
+      tags: [projects]
+      summary: List my projects
+      operationId: listProjects
+      responses:
+        "200":
+          description: User's projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      tags: [projects]
+      summary: Create a project
+      description: Fails with `409` if the user already owns 10 projects.
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectCreate"
+      responses:
+        "201":
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: Project limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: project_limit_reached
+                message: "You have reached the maximum of 10 projects."
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /projects/{projectId}:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+
+    get:
+      tags: [projects]
+      summary: Get a project
+      operationId: getProject
+      responses:
+        "200":
+          description: The project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      tags: [projects]
+      summary: Rename a project
+      operationId: patchProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectCreate"
+      responses:
+        "200":
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      tags: [projects]
+      summary: Delete a project
+      description: Cascades — all notes belonging to the project are deleted.
+      operationId: deleteProject
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ── Notes (project-scoped) ────────────────
+
+  /projects/{projectId}/notes:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+
+    get:
+      tags: [notes]
+      summary: List notes
+      description: Returns all notes for the project. Filter by `section` and/or `field`.
+      operationId: listNotes
+      parameters:
+        - $ref: "#/components/parameters/SectionQuery"
+        - $ref: "#/components/parameters/FieldQuery"
+      responses:
+        "200":
+          description: Array of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+    post:
+      tags: [notes]
+      summary: Create a note
+      operationId: createNote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteCreate"
+      responses:
+        "201":
+          description: Note created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /projects/{projectId}/notes/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+      - $ref: "#/components/parameters/NoteId"
+
+    get:
+      tags: [notes]
+      summary: Get a note
+      operationId: getNote
+      responses:
+        "200":
+          description: The note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      tags: [notes]
+      summary: Replace a note
+      operationId: replaceNote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteCreate"
+      responses:
+        "200":
+          description: Updated note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    patch:
+      tags: [notes]
+      summary: Partially update a note
+      description: Update only `content` and/or `order`.
+      operationId: patchNote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotePatch"
+      responses:
+        "200":
+          description: Updated note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+    delete:
+      tags: [notes]
+      summary: Delete a note
+      operationId: deleteNote
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ── Canvas (project-scoped) ───────────────
+
+  /projects/{projectId}/canvas:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+
+    get:
+      tags: [canvas]
+      summary: Full canvas
+      description: |
+        Returns the entire canvas organised as `section → field → [notes]`.
+        All fields are always present, even if empty.
+      operationId: getCanvas
+      responses:
+        "200":
+          description: Canvas object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Canvas"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+# ─────────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────────
+
+components:
+
+  # ── Security ─────────────────────────────
+
+  securitySchemes:
+    FirebaseAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID Token
+      description: |
+        Firebase ID Token obtained after Google Sign-In.
+        Pass it as `Authorization: Bearer <token>`.
+
+  # ── Parameters ───────────────────────────
+
+  parameters:
+
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Project UUID
+
+    NoteId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Note UUID
+
+    SectionQuery:
+      name: section
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/Section"
+      description: Filter notes by canvas section
+
+    FieldQuery:
+      name: field
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Filter notes by field name within the section
+
+  # ── Schemas ───────────────────────────────
+
+  schemas:
+
+    # Project
+
+    Project:
+      type: object
+      required: [id, name, owner_uid, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          example: "My SaaS Growth Plan"
+        owner_uid:
+          type: string
+          readOnly: true
+          description: Firebase UID of the owner
+          example: "uid_abc123"
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    ProjectCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "My SaaS Growth Plan"
+
+    # Enums
+
+    Section:
+      type: string
+      enum:
+        - project_overview
+        - metrics
+        - retention
+        - acquisition
+        - toolbox
+        - high_tempo_testing
+        - customer_loops
+      description: Canvas section
+
+    ProjectOverviewField:
+      type: string
+      enum:
+        - unique_value_proposition
+        - secret_sauce
+        - core_value
+        - target_customers
+        - why
+
+    MetricsField:
+      type: string
+      enum:
+        - formula
+        - north_star_metric
+
+    RetentionField:
+      type: string
+      enum:
+        - short_term
+        - medium_term
+        - long_term
+
+    AcquisitionField:
+      type: string
+      enum:
+        - language_market_fit
+        - channel_product_fit
+
+    ToolboxField:
+      type: string
+      enum:
+        - data_mining
+        - social_tracking
+        - ads_tracking
+        - surveys
+        - other
+
+    HighTempoTestingField:
+      type: string
+      enum:
+        - framework
+        - frequency
+
+    CustomerLoopsField:
+      type: string
+      enum:
+        - payload
+        - conversion_rate
+        - frequency
+
+    # Note
+
+    Note:
+      type: object
+      required: [id, project_id, section, field, content, order, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        project_id:
+          type: string
+          format: uuid
+          readOnly: true
+        section:
+          $ref: "#/components/schemas/Section"
+        field:
+          type: string
+          example: "unique_value_proposition"
+          description: Field name within the section (see per-section field enums)
+        content:
+          type: string
+          example: "We help growth hackers track experiments in one place."
+        order:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Position when multiple notes exist for the same section/field
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    NoteCreate:
+      type: object
+      required: [section, field, content]
+      properties:
+        section:
+          $ref: "#/components/schemas/Section"
+        field:
+          type: string
+          example: "north_star_metric"
+        content:
+          type: string
+          minLength: 1
+          example: "Weekly active experiments"
+        order:
+          type: integer
+          minimum: 0
+          default: 0
+
+    NotePatch:
+      type: object
+      description: At least one property must be provided.
+      properties:
+        content:
+          type: string
+          minLength: 1
+        order:
+          type: integer
+          minimum: 0
+
+    # Canvas view
+
+    FieldNotes:
+      type: object
+      description: Map of field name → ordered list of notes
+      additionalProperties:
+        type: array
+        items:
+          $ref: "#/components/schemas/Note"
+
+    Canvas:
+      type: object
+      description: Full canvas grouped by section → field → notes
+      properties:
+        project_overview:
+          $ref: "#/components/schemas/FieldNotes"
+        metrics:
+          $ref: "#/components/schemas/FieldNotes"
+        retention:
+          $ref: "#/components/schemas/FieldNotes"
+        acquisition:
+          $ref: "#/components/schemas/FieldNotes"
+        toolbox:
+          $ref: "#/components/schemas/FieldNotes"
+        high_tempo_testing:
+          $ref: "#/components/schemas/FieldNotes"
+        customer_loops:
+          $ref: "#/components/schemas/FieldNotes"
+
+    # Errors
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+
+    ValidationError:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            required: [loc, msg, type]
+            properties:
+              loc:
+                type: array
+                items:
+                  type: string
+              msg:
+                type: string
+              type:
+                type: string
+
+  # ── Responses ─────────────────────────────
+
+  responses:
+
+    Unauthorized:
+      description: Missing or invalid Firebase token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: unauthorized
+            message: "Missing or invalid Authorization header."
+
+    Forbidden:
+      description: Authenticated user does not own this project
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: forbidden
+            message: "Project not found or access denied."
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: not_found
+            message: "Resource not found."
+
+    ValidationError:
+      description: Request body failed validation
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationError"
