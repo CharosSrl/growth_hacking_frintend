@@ -75,7 +75,7 @@ interface AddState  { section: string; field: string; content: string; }
                           [attr.aria-selected]="activeSection === sec.key"
                           [style.--sec-color]="sec.color"
                           (click)="selectSection(sec.key)">
-                    <span class="canvas-nav__dot" aria-hidden="true"></span>
+                    <span class="canvas-nav__icon" aria-hidden="true">{{ sec.icon }}</span>
                     <span class="canvas-nav__label">{{ sec.label }}</span>
                     @if (sectionCount(sec.key)) {
                       <span class="canvas-nav__count">{{ sectionCount(sec.key) }}</span>
@@ -99,7 +99,7 @@ interface AddState  { section: string; field: string; content: string; }
             <section class="section-page" [style.--sec-color]="active.color"
                      [attr.aria-labelledby]="'sp-'+active.key">
               <header class="section-page__header">
-                <span class="section-page__dot" aria-hidden="true"></span>
+                <span class="section-page__icon" aria-hidden="true">{{ active.icon }}</span>
                 <div>
                   <h1 class="section-page__title" id="sp-{{active.key}}">{{ active.label }}</h1>
                   <p class="section-page__sub">
@@ -195,7 +195,7 @@ interface AddState  { section: string; field: string; content: string; }
             </div>
             @for (sec of schema; track sec.key) {
               <section class="print-section" [style.--sec-color]="sec.color">
-                <h2>{{ sec.label }}</h2>
+                <h2>{{ sec.icon }} {{ sec.label }}</h2>
                 @for (field of sec.fields; track field.key) {
                   <div class="print-field">
                     <h3>{{ field.label }}</h3>

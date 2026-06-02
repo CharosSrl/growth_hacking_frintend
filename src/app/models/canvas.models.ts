@@ -28,12 +28,13 @@ export interface SectionSchema {
   key: string;
   label: string;
   color: string;
+  icon: string;
   fields: SectionField[];
 }
 
 export const CANVAS_SCHEMA: SectionSchema[] = [
   {
-    key: 'project_overview', label: 'Project Overview', color: '#6366f1',
+    key: 'project_overview', label: 'Project Overview', color: '#6366f1', icon: '🎯',
     fields: [
       { key: 'unique_value_proposition', label: 'Unique Value Proposition' },
       { key: 'secret_sauce', label: 'Secret Sauce' },
@@ -43,14 +44,14 @@ export const CANVAS_SCHEMA: SectionSchema[] = [
     ],
   },
   {
-    key: 'metrics', label: 'Metrics', color: '#06b6d4',
+    key: 'metrics', label: 'Metrics', color: '#06b6d4', icon: '📊',
     fields: [
       { key: 'formula', label: 'Growth Formula' },
       { key: 'north_star_metric', label: 'North Star Metric' },
     ],
   },
   {
-    key: 'retention', label: 'Retention', color: '#10b981',
+    key: 'retention', label: 'Retention', color: '#10b981', icon: '🧲',
     fields: [
       { key: 'short_term', label: 'Short Term' },
       { key: 'medium_term', label: 'Medium Term' },
@@ -58,14 +59,14 @@ export const CANVAS_SCHEMA: SectionSchema[] = [
     ],
   },
   {
-    key: 'acquisition', label: 'Acquisition', color: '#f59e0b',
+    key: 'acquisition', label: 'Acquisition', color: '#f59e0b', icon: '🚀',
     fields: [
       { key: 'language_market_fit', label: 'Language-Market Fit' },
       { key: 'channel_product_fit', label: 'Channel-Product Fit' },
     ],
   },
   {
-    key: 'toolbox', label: 'Toolbox', color: '#ef4444',
+    key: 'toolbox', label: 'Toolbox', color: '#ef4444', icon: '🧰',
     fields: [
       { key: 'data_mining', label: 'Data Mining' },
       { key: 'social_tracking', label: 'Social Tracking' },
@@ -75,14 +76,14 @@ export const CANVAS_SCHEMA: SectionSchema[] = [
     ],
   },
   {
-    key: 'high_tempo_testing', label: 'High-Tempo Testing', color: '#8b5cf6',
+    key: 'high_tempo_testing', label: 'High-Tempo Testing', color: '#8b5cf6', icon: '⚡',
     fields: [
       { key: 'framework', label: 'Framework' },
       { key: 'frequency', label: 'Frequency' },
     ],
   },
   {
-    key: 'customer_loops', label: 'Customer Loops', color: '#ec4899',
+    key: 'customer_loops', label: 'Customer Loops', color: '#ec4899', icon: '🔄',
     fields: [
       { key: 'payload', label: 'Payload' },
       { key: 'conversion_rate', label: 'Conversion Rate' },

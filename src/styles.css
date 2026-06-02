@@ -632,6 +632,10 @@ img { max-width: 100%; display: block; }
   background: var(--sec-color, var(--accent));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--sec-color, var(--accent)) 16%, transparent);
 }
+.canvas-nav__icon {
+  flex-shrink: 0; width: 18px; text-align: center;
+  font-size: 15px; line-height: 1;
+}
 .canvas-nav__label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .canvas-nav__count {
   font-size: 11px; color: var(--text-tertiary);
@@ -662,6 +666,13 @@ img { max-width: 100%; display: block; }
   width: 12px; height: 12px; border-radius: 50%; margin-top: 5px; flex-shrink: 0;
   background: var(--sec-color, var(--accent));
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--sec-color, var(--accent)) 16%, transparent);
+}
+.section-page__icon {
+  flex-shrink: 0; font-size: 28px; line-height: 1; margin-top: 1px;
+  width: 44px; height: 44px; border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--sec-color, var(--accent)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sec-color, var(--accent)) 22%, transparent);
 }
 .section-page__title {
   font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
