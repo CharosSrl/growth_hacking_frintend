@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
@@ -14,7 +15,7 @@ interface AddState  { section: string; field: string; content: string; }
 @Component({
   selector: 'app-canvas',
   standalone: true,
-  imports: [FormsModule, RouterLink, HeaderComponent],
+  imports: [FormsModule, RouterLink, HeaderComponent, NgbDropdownModule],
   animations: [
     trigger('fields', [
       transition('* => *', [
@@ -68,6 +69,36 @@ interface AddState  { section: string; field: string; content: string; }
           <div class="canvas-layout">
             <!-- ── Section navigation ─────────────────────────────── -->
             <aside class="canvas-nav" aria-label="Canvas sections">
+              <!-- Mobile: dropdown section picker (ng-bootstrap) -->
+              <div class="canvas-nav__picker" ngbDropdown display="static">
+                <button class="section-picker-toggle" ngbDropdownToggle
+                        [style.--sec-color]="active.color" aria-label="Select section">
+                  <span class="canvas-nav__icon" aria-hidden="true">{{ active.icon }}</span>
+                  <span class="canvas-nav__label">{{ active.label }}</span>
+                  @if (sectionCount(active.key)) {
+                    <span class="canvas-nav__count">{{ sectionCount(active.key) }}</span>
+                  }
+                  <svg class="section-picker-chevron" width="14" height="14" viewBox="0 0 16 16"
+                       fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path d="M4 6l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <div ngbDropdownMenu class="section-picker-menu" aria-label="Sections">
+                  @for (sec of schema; track sec.key) {
+                    <button ngbDropdownItem class="section-picker-item"
+                            [class.active]="activeSection === sec.key"
+                            [style.--sec-color]="sec.color"
+                            (click)="selectSection(sec.key)">
+                      <span class="canvas-nav__icon" aria-hidden="true">{{ sec.icon }}</span>
+                      <span class="section-picker-item__label">{{ sec.label }}</span>
+                      @if (sectionCount(sec.key)) {
+                        <span class="canvas-nav__count">{{ sectionCount(sec.key) }}</span>
+                      }
+                    </button>
+                  }
+                </div>
+              </div>
+
               <div class="canvas-nav__list" role="tablist" aria-orientation="vertical">
                 @for (sec of schema; track sec.key) {
                   <button class="canvas-nav__item" role="tab"
