@@ -828,14 +828,18 @@ body::after {
   color: var(--text-secondary);
 }
 .hint-btn {
-  flex-shrink: 0; width: 24px; height: 24px; border-radius: var(--r-sm);
-  display: inline-flex; align-items: center; justify-content: center;
-  color: var(--text-tertiary); border: 1px solid transparent;
+  flex-shrink: 0; height: 24px; padding: 0 8px 0 6px; border-radius: 99px;
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--warning);
+  background: rgba(245,158,11,.1);
+  border: 1px solid rgba(245,158,11,.22);
+  font-size: 11px; font-weight: 600;
   transition: color var(--t-fast), background var(--t-fast), border-color var(--t-fast);
 }
+.hint-btn::after { content: 'Hint'; }
 .hint-btn:hover {
-  color: var(--warning); background: rgba(245,158,11,.1);
-  border-color: rgba(245,158,11,.25);
+  background: rgba(245,158,11,.2);
+  border-color: rgba(245,158,11,.4);
 }
 .hint-btn:focus-visible {
   outline: none; box-shadow: 0 0 0 3px rgba(245,158,11,.3);
