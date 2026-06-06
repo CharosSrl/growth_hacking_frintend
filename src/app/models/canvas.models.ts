@@ -32,6 +32,14 @@ export interface SectionSchema {
   fields: SectionField[];
 }
 
+/** Educational hints, loaded at runtime from assets/hints.json (editable content). */
+export interface SectionHints {
+  summary?: string;                      // short line shown under the section title
+  about?: string;                        // longer explanation (info-button popover)
+  fields?: Record<string, string[]>;     // field key → list of hints
+}
+export type HintsData = Record<string, SectionHints>;
+
 export const CANVAS_SCHEMA: SectionSchema[] = [
   {
     key: 'project_overview', label: 'Project Overview', color: '#6366f1', icon: '🎯',

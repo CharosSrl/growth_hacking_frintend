@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdownModule, NgbPopoverModule } from '@ng-bootstrap/ng-bootstrap';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { ApiService } from '../../services/api.service';
 import { StateService } from '../../services/state.service';
 import { ToastService } from '../../services/toast.service';
 import { HeaderComponent } from '../../components/header/header.component';
+import { HintsService } from '../../services/hints.service';
 import { Note, Canvas, CANVAS_SCHEMA, SectionSchema } from '../../models/canvas.models';
 
 interface EditState { noteId: string; content: string; }
@@ -15,7 +16,7 @@ interface AddState  { section: string; field: string; content: string; }
 @Component({
   selector: 'app-canvas',
   standalone: true,
-  imports: [FormsModule, RouterLink, HeaderComponent, NgbDropdownModule],
+  imports: [FormsModule, RouterLink, HeaderComponent, NgbDropdownModule, NgbPopoverModule],
   animations: [
     trigger('fields', [
       transition('* => *', [
@@ -131,8 +132,23 @@ interface AddState  { section: string; field: string; content: string; }
                      [attr.aria-labelledby]="'sp-'+active.key">
               <header class="section-page__header">
                 <span class="section-page__icon" aria-hidden="true">{{ active.icon }}</span>
-                <div>
-                  <h1 class="section-page__title" id="sp-{{active.key}}">{{ active.label }}</h1>
+                <div class="section-page__heading">
+                  <div class="section-page__titlerow">
+                    <h1 class="section-page__title" id="sp-{{active.key}}">{{ active.label }}</h1>
+                    @if (hints.about(active.key)) {
+                      <button type="button" class="section-info-btn"
+                              [ngbPopover]="hints.about(active.key)" popoverTitle="About this section"
+                              triggers="click" autoClose="outside" container="body" popoverClass="hint-popover"
+                              aria-label="About this section">
+                        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+                          <circle cx="8" cy="8" r="6.5"/><path d="M8 7.2v3.4" stroke-linecap="round"/><circle cx="8" cy="5.2" r=".5" fill="currentColor" stroke="none"/>
+                        </svg>
+                      </button>
+                    }
+                  </div>
+                  @if (hints.summary(active.key)) {
+                    <p class="section-page__hint">{{ hints.summary(active.key) }}</p>
+                  }
                   <p class="section-page__sub">
                     {{ active.fields.length }} fields ·
                     {{ sectionCount(active.key) }} {{ sectionCount(active.key) === 1 ? 'note' : 'notes' }}
@@ -143,7 +159,27 @@ interface AddState  { section: string; field: string; content: string; }
               <div class="field-stack" [@fields]="activeSection">
                 @for (field of active.fields; track field.key) {
                   <div class="field-block">
-                    <div class="field-block__label">{{ field.label }}</div>
+                    <div class="field-block__head">
+                      <div class="field-block__label">{{ field.label }}</div>
+                      @if (hints.fieldHints(active.key, field.key).length) {
+                        <button type="button" class="hint-btn"
+                                [ngbPopover]="fieldHintTpl" popoverTitle="Hints"
+                                triggers="click" autoClose="outside" container="body" popoverClass="hint-popover"
+                                [attr.aria-label]="'Hints for ' + field.label">
+                          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M6 12.5h4M6.5 14h3" stroke-linecap="round"/>
+                            <path d="M8 1.5a4.5 4.5 0 0 0-2.7 8.1c.4.3.7.8.7 1.4h4c0-.6.3-1.1.7-1.4A4.5 4.5 0 0 0 8 1.5z"/>
+                          </svg>
+                        </button>
+                        <ng-template #fieldHintTpl>
+                          <ul class="hint-list">
+                            @for (h of hints.fieldHints(active.key, field.key); track $index) {
+                              <li>{{ h }}</li>
+                            }
+                          </ul>
+                        </ng-template>
+                      }
+                    </div>
                     <div class="notes-list" role="list"
                          [id]="'nl-'+active.key+'-'+field.key"
                          (dragover)="onDragOver($event)"
@@ -268,6 +304,7 @@ export class CanvasComponent implements OnInit {
     public state: StateService,
     private toast: ToastService,
     private router: Router,
+    public hints: HintsService,
   ) {}
 
   get active(): SectionSchema {

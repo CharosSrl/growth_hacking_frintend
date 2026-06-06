@@ -775,11 +775,33 @@ body::after {
   background: color-mix(in srgb, var(--sec-color, var(--accent)) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--sec-color, var(--accent)) 22%, transparent);
 }
+.section-page__heading { min-width: 0; }
+.section-page__titlerow { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .section-page__title {
   font-size: clamp(21px, 1rem + 1.6vw, 27px); font-weight: 700; letter-spacing: -0.02em;
   color: var(--text-primary); line-height: 1.15;
 }
-.section-page__sub { font-size: 13px; color: var(--text-tertiary); margin-top: 3px; }
+.section-page__hint {
+  font-size: 13.5px; color: var(--text-secondary); line-height: 1.5;
+  margin-top: var(--space-2); max-width: 70ch;
+}
+.section-page__sub { font-size: 12px; color: var(--text-tertiary); margin-top: 3px; }
+
+.section-info-btn {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-tertiary); border: 1px solid var(--border-default);
+  background: var(--bg-overlay);
+  transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+}
+.section-info-btn:hover {
+  color: var(--sec-color, var(--accent));
+  border-color: color-mix(in srgb, var(--sec-color, var(--accent)) 45%, transparent);
+}
+.section-info-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sec-color, var(--accent)) 30%, transparent);
+}
 
 /* ── Field block ────────────────────────────────────────────── */
 .field-stack { display: flex; flex-direction: column; gap: var(--space-5); }
@@ -796,13 +818,60 @@ body::after {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--sec-color, var(--accent)) 12%, transparent);
 }
 .field-block--skeleton { display: flex; flex-direction: column; gap: var(--space-2); }
+.field-block__head {
+  display: flex; align-items: center; gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
 .field-block__label {
+  flex: 1; min-width: 0;
   font-size: 13px; font-weight: 600; letter-spacing: 0.01em;
-  color: var(--text-secondary); margin-bottom: var(--space-3);
+  color: var(--text-secondary);
+}
+.hint-btn {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: var(--r-sm);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-tertiary); border: 1px solid transparent;
+  transition: color var(--t-fast), background var(--t-fast), border-color var(--t-fast);
+}
+.hint-btn:hover {
+  color: var(--warning); background: rgba(245,158,11,.1);
+  border-color: rgba(245,158,11,.25);
+}
+.hint-btn:focus-visible {
+  outline: none; box-shadow: 0 0 0 3px rgba(245,158,11,.3);
 }
 .field-block__empty {
   font-size: 12px; color: var(--text-tertiary); font-style: italic;
   padding: 2px 0 var(--space-1);
+}
+
+/* ── Hint popover (ng-bootstrap, themed; appended to <body>) ──── */
+/* No Bootstrap CSS is loaded, so we style .popover/.popover-* from scratch. */
+.hint-popover.popover {
+  display: block; position: absolute; z-index: 1080;
+  max-width: min(320px, calc(100vw - 24px));
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  font-family: var(--font); color: var(--text-primary);
+}
+.hint-popover .popover-arrow { display: none; }
+.hint-popover .popover-header {
+  padding: 9px 13px; margin: 0;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--warning);
+  border-bottom: 1px solid var(--border-default);
+  background: transparent;
+}
+.hint-popover .popover-body {
+  padding: 11px 13px;
+  font-size: 13px; color: var(--text-secondary); line-height: 1.55;
+}
+.hint-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-2); }
+.hint-list li { position: relative; padding-left: 18px; }
+.hint-list li::before {
+  content: '💡'; position: absolute; left: 0; top: 0; font-size: 11px; line-height: 1.45;
 }
 
 /* Notes list */

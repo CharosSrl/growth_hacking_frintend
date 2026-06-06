@@ -1,0 +1,155 @@
+{
+  "project_overview": {
+    "summary": "Define who you serve, the value you create, and why it matters.",
+    "about": "The Project Overview is the foundation of your growth strategy. Before optimizing channels or metrics, you must be crystal clear on who your customer is, the core value you deliver, and what makes you hard to copy. Everything downstream — acquisition, retention, loops — should trace back to the truths you capture here.",
+    "fields": {
+      "unique_value_proposition": [
+        "A UVP is the one clear reason a customer picks you over every alternative — including doing nothing.",
+        "Make it specific and outcome-focused. Avoid vague claims like 'best quality' or 'great experience'.",
+        "Try the template: 'We help [who] achieve [outcome] by [how], unlike [alternative].'",
+        "If a competitor could say the exact same sentence, it isn't yet a differentiator."
+      ],
+      "secret_sauce": [
+        "Your unfair advantage: something hard for competitors to copy or buy (proprietary data, network effects, distribution, brand, tech).",
+        "Ask: 'If a well-funded rival tried to clone us tomorrow, what could they NOT replicate quickly?'",
+        "Sustainable advantages compound over time — they get stronger as you grow, not weaker."
+      ],
+      "core_value": [
+        "The single most important benefit a customer gets — the reason they'd be upset if you disappeared.",
+        "Focus on the transformation or job-to-be-done, not the feature list.",
+        "Reaching the core value fast (the 'aha moment') is the strongest driver of activation and retention."
+      ],
+      "target_customers": [
+        "Describe a specific segment, not 'everyone'. Niche down: industry, role, company size, or behavior.",
+        "Capture their pains, goals, and current alternatives — these shape your messaging and channels.",
+        "The sharper your target, the cheaper and more effective your acquisition becomes."
+      ],
+      "why": [
+        "Your mission and motivation — the deeper purpose behind the product.",
+        "A strong 'why' aligns the team and resonates emotionally with early adopters.",
+        "Customers increasingly buy from companies whose purpose they believe in."
+      ]
+    }
+  },
+  "metrics": {
+    "summary": "Pick the few numbers that prove you're really growing.",
+    "about": "Metrics turn growth from guesswork into a discipline. Define the formula that describes how your business actually grows, then choose one North Star Metric that captures the value you deliver to customers. Good metrics are actionable, comparable over time, and resistant to vanity.",
+    "fields": {
+      "formula": [
+        "Express growth as an equation, e.g. Revenue = Visitors × Conversion Rate × Average Order Value.",
+        "Breaking growth into factors shows you exactly which lever to pull next.",
+        "Each variable should be measurable and something a team can directly influence."
+      ],
+      "north_star_metric": [
+        "The single metric that best captures the value customers get from your product (e.g. weekly active teams, nights booked).",
+        "It should predict long-term revenue better than revenue itself does in the short term.",
+        "Avoid vanity metrics (total signups, page views) — favor metrics tied to real, repeated value."
+      ]
+    }
+  },
+  "retention": {
+    "summary": "Keep the customers you win — retention is where growth compounds.",
+    "about": "Acquisition without retention is a leaky bucket. Retention measures whether customers keep coming back and getting value. Plan deliberate actions across time horizons: the first session/week (short term), the first weeks/months of habit formation (medium term), and long-term loyalty. Improving retention lifts every other growth metric.",
+    "fields": {
+      "short_term": [
+        "Focus on activation: getting the user to their 'aha moment' as fast as possible in the first session(s).",
+        "Reduce friction in onboarding — every extra step loses users.",
+        "Measure: do users return within the first few days/week?"
+      ],
+      "medium_term": [
+        "This is the habit-forming window — build triggers and value that bring users back regularly.",
+        "Identify the behavior that predicts long-term retention (e.g. 'invited a teammate', 'created 3 projects').",
+        "Lifecycle emails, notifications, and quick wins help users build a routine."
+      ],
+      "long_term": [
+        "Loyalty and expansion: deepening value, upsells, community, and switching costs.",
+        "Long-retained customers become advocates — they power referrals and word of mouth.",
+        "Watch cohort curves: healthy products flatten into a stable retention plateau."
+      ]
+    }
+  },
+  "acquisition": {
+    "summary": "Find repeatable, scalable ways to reach the right people.",
+    "about": "Acquisition is about matching your message and channels to your market. First nail Language–Market Fit (saying it the way your customers think), then find Channel–Product Fit (the channels where your product naturally spreads or sells). Concentrate on one or two channels that work before diversifying.",
+    "fields": {
+      "language_market_fit": [
+        "Use the exact words your customers use to describe their problem — mirror their language, not your jargon.",
+        "Mine reviews, support tickets, and sales calls for the phrases that resonate.",
+        "The right message on the wrong-sounding words still fails; copy is a growth lever."
+      ],
+      "channel_product_fit": [
+        "Some products fit some channels: viral products fit social, high-ACV B2B fits sales/outbound, SEO fits high-intent search.",
+        "Pick channels that match your price point, sales cycle, and how customers discover solutions.",
+        "Master one channel to a predictable CAC before adding another."
+      ]
+    }
+  },
+  "toolbox": {
+    "summary": "The instruments you use to observe, measure, and learn.",
+    "about": "Growth runs on evidence. The Toolbox is your stack for gathering data and signals: behavioral analytics, social and ad tracking, and direct customer feedback. The goal isn't more tools — it's a reliable feedback loop so every experiment can be measured and every decision can be informed.",
+    "fields": {
+      "data_mining": [
+        "Tools and methods to extract insight from your product and usage data (analytics, SQL, dashboards).",
+        "Look for patterns: where users drop off, which features correlate with retention.",
+        "Instrument key events early — you can't analyze data you didn't collect."
+      ],
+      "social_tracking": [
+        "Monitor mentions, sentiment, and conversations about you and competitors on social platforms.",
+        "Social signals reveal emerging demand, objections, and content that resonates.",
+        "Tools: native platform analytics, social listening dashboards."
+      ],
+      "ads_tracking": [
+        "Measure paid campaigns end-to-end: impressions, clicks, conversions, and cost per acquisition.",
+        "Proper attribution (UTMs, pixels, conversion APIs) tells you which spend actually pays back.",
+        "Track CAC vs LTV per channel to know what's profitable to scale."
+      ],
+      "surveys": [
+        "Ask customers directly: motivations, objections, and the famous 'how disappointed would you be without us?'",
+        "Qualitative feedback explains the 'why' behind the numbers.",
+        "Keep surveys short and targeted to a specific decision."
+      ],
+      "other": [
+        "Any additional tools or signals specific to your business (heatmaps, session replays, CRM, community).",
+        "List what fills gaps in your current measurement.",
+        "Prefer tools that integrate into one source of truth."
+      ]
+    }
+  },
+  "high_tempo_testing": {
+    "summary": "Run many small experiments, fast — speed of learning wins.",
+    "about": "Growth is the output of a high-tempo testing process: a steady cadence of experiments, each with a hypothesis, a metric, and a learning. The team that tests fastest learns fastest and compounds wins. Define the framework you'll follow and the frequency you'll commit to.",
+    "fields": {
+      "framework": [
+        "Use a repeatable loop: Ideate → Prioritize → Test → Analyze → Learn (then repeat).",
+        "Prioritize ideas with a scoring model like ICE (Impact, Confidence, Ease) to avoid bias.",
+        "Every experiment needs a clear hypothesis and a single success metric defined up front."
+      ],
+      "frequency": [
+        "Set a cadence (e.g. X experiments per week) and protect it — tempo beats perfection.",
+        "More at-bats means more wins; even failed tests produce learnings.",
+        "Track your win rate and velocity over time, not just individual results."
+      ]
+    }
+  },
+  "customer_loops": {
+    "summary": "Build mechanisms where usage drives more usage.",
+    "about": "Customer (or growth) loops are self-reinforcing cycles where the output of one user's action becomes the input that attracts or activates the next — unlike one-shot funnels. Define the payload (what gets shared/created), the conversion rate at each step, and how often the loop spins. Compounding loops are how products grow without proportionally growing spend.",
+    "fields": {
+      "payload": [
+        "What travels through the loop: an invite, shared content, a referral link, a public artifact.",
+        "The more value the payload carries for the recipient, the stronger the loop.",
+        "Make sharing/creating the payload a natural part of getting value, not a bolt-on ask."
+      ],
+      "conversion_rate": [
+        "The percentage that completes each step of the loop (e.g. % of invites accepted).",
+        "Small improvements in loop conversion compound dramatically over cycles.",
+        "Instrument every step so you know exactly where the loop leaks."
+      ],
+      "frequency": [
+        "How often the loop spins — cycle time matters as much as conversion.",
+        "A faster loop with modest conversion can outgrow a slow loop with high conversion.",
+        "Look for ways to shorten the time between one loop completing and the next starting."
+      ]
+    }
+  }
+}
