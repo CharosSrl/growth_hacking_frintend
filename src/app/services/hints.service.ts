@@ -16,8 +16,9 @@ export class HintsService {
   loaded = false;
 
   constructor(private http: HttpClient) {
-    // Relative path → respects <base href>; served as a static asset in dev & prod.
-    this.http.get<HintsData>('assets/hints.json').subscribe({
+    // Absolute path → always /assets/hints.json regardless of the current route
+    // (a relative path resolves against deep routes like /canvas/:id and 404s).
+    this.http.get<HintsData>('/assets/hints.json').subscribe({
       next: d => { this.data = d ?? {}; this.loaded = true; },
       error: () => { this.loaded = true; },   // fail soft: hints simply don't show
     });
