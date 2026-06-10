@@ -124,6 +124,14 @@ interface AddState  { section: string; field: string; content: string; }
                   </svg>
                   Export as PDF
                 </button>
+                <button class="btn btn--secondary btn--full" (click)="exportMd()"
+                        [disabled]="totalNotes() === 0" title="Export the full canvas as a Markdown file">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <path d="M8 1v9M4.5 6.5L8 10l3.5-3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 11v2.5h12V11" stroke-linecap="round"/>
+                  </svg>
+                  Export as MD
+                </button>
               </div>
             </aside>
 
@@ -363,6 +371,51 @@ export class CanvasComponent implements OnInit {
     const after = () => { document.title = restore; window.removeEventListener('afterprint', after); };
     window.addEventListener('afterprint', after);
     window.print();
+  }
+
+  // ── Export as Markdown (download .md file) ────────────────────
+
+  exportMd() {
+    if (this.totalNotes() === 0) return;
+    const md = this.buildMarkdown();
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${this.slugify(this.projectName)}-canvas.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private buildMarkdown(): string {
+    const lines: string[] = [];
+    lines.push(`# ${this.projectName}`);
+    lines.push('');
+    lines.push(`_GrowthOS — Growth Strategy Canvas · ${this.today}_`);
+    lines.push('');
+    for (const sec of this.schema) {
+      lines.push(`## ${sec.icon} ${sec.label}`);
+      lines.push('');
+      for (const field of sec.fields) {
+        lines.push(`### ${field.label}`);
+        lines.push('');
+        const notes = this.fieldNotes(sec.key, field.key);
+        if (notes.length) {
+          for (const note of notes) lines.push(`- ${note.content}`);
+        } else {
+          lines.push('_—_');
+        }
+        lines.push('');
+      }
+    }
+    return lines.join('\n');
+  }
+
+  private slugify(name: string): string {
+    return (name || 'project')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'project';
   }
 
   // ── Rename project ────────────────────────────────────────────
